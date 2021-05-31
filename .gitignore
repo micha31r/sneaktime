@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Custom
+.gitattributes
+
 # Distribution / packaging
 .Python
 build/

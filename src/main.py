@@ -13,6 +13,53 @@ clock = pg.time.Clock()
 rs_dir = path.join(BASE_DIR, "resources")
 font = pg.font.Font(rs_dir + "/m6x11.ttf", 64)
 
+class Camera:
+    def __init__(self):
+        self.pos = self.x, self.y = [0,0]
+        self.vel = [0,0]
+        self.margin = 80
+        self.max_vel = 50
+        self.friction = 0.99
+        self.do_track = True
+
+    def track(self, rect):
+        # print(rect[0] < self.x + 50)
+        if self.do_track:
+            # Horzontal tracking
+            if rect[0] < self.x + self.margin:
+                self.vel[0] = rect[0] - (self.x + self.margin)
+            if rect[0] + rect[2] > self.x + self.width - self.margin:
+                self.vel[0] = (rect[0] + rect[2]) - (self.x + self.width - self.margin)
+
+            # Verticle tracking
+            if rect[1] < self.y + self.margin:
+                self.vel[1] = rect[1] - (self.y + self.margin)
+            if rect[1] + rect[3] > self.y + self.height - self.margin:
+                self.vel[1] = (rect[1] + rect[3]) - (self.y + self.height - self.margin)
+
+        # Set max velocity
+        self.vel[0] = self.vel[0] if self.vel[0] > -self.max_vel else -self.max_vel
+        self.vel[0] = self.vel[0] if self.vel[0] < self.max_vel else self.max_vel
+
+    def update(self, dt, window_size):
+        self.width = window_size[0] / W_SCALE[0]
+        self.height = window_size[1] / W_SCALE[1]
+
+        # Move camera
+        self.x += self.vel[0] / dt
+        self.y += self.vel[1] / dt
+
+        # Decrease velocity
+        self.vel[0] *= self.friction
+        self.vel[1] *= self.friction
+
+        # Set velocity to 0 if too small
+        if abs(self.vel[0]) < 0.01:
+            self.vel[0] = 0
+        if abs(self.vel[1]) < 0.01:
+            self.vel[1] = 0
+
+
 class SplashScreen:
     def __init__(self):
         self.text = font.render('Demo', True, (0,0,0))
@@ -75,8 +122,8 @@ class TiledMap:
                     tx = 0
                     ty = 0
                     for tile_id in chunk["data"]:
-                        render_x = (cx + tx - layer["startx"]) * tilewidth
-                        render_y = (cy + ty - layer["starty"]) * tileheight
+                        render_x = (cx + tx) * tilewidth # + (0-layer["startx"] * 16)
+                        render_y = (cy + ty) * tileheight # + (0-layer["starty"] * 16)
                         # means there is no tile
                         if tile_id != 0:
                             screen.blit(self.tileset[tile_id-1], (render_x, render_y, tilewidth, tileheight))
@@ -89,6 +136,7 @@ class Player:
     def __init__(self):
         self.pos = [0,0]
         self.vel = [0,0]
+        self.max_vel = 30
         self.friction = 0.9
 
         # Sprites & Animation
@@ -123,13 +171,13 @@ class Player:
         # Set initial velocities on keypress
         keys = pg.key.get_pressed()
         if keys[pg.K_LEFT]:
-            self.vel[0] = -20
+            self.vel[0] = -self.max_vel
         elif keys[pg.K_RIGHT]:
-            self.vel[0] = 20
+            self.vel[0] = self.max_vel
         if keys[pg.K_UP]:
-            self.vel[1] = -20
+            self.vel[1] = -self.max_vel
         elif keys[pg.K_DOWN]:
-            self.vel[1] = 20
+            self.vel[1] = self.max_vel
 
         # Move player
         self.pos[0] += self.vel[0] / dt
@@ -145,6 +193,8 @@ class Player:
         if abs(self.vel[1]) < 0.01:
             self.vel[1] = 0
 
+        camera.track((self.pos[0], self.pos[1], self.frame_width, self.frame_height))
+
     def draw(self):
         if self.is_idle:
             img = self.frames[self.idle_frames[self.current_frame_index]]
@@ -159,8 +209,7 @@ class Game:
         self.tilemap = TiledMap()
         self.player = Player()
 
-    def update(self):
-        dt = clock.tick(60)
+    def update(self, dt):
         mode_changed = False
         if self.prev_mode != MODE:
             mode_changed = True
@@ -182,6 +231,7 @@ class Game:
             self.player.draw()
 
 game = Game()
+camera = Camera()
 
 while 1:
     for event in pg.event.get():
@@ -194,14 +244,18 @@ while 1:
             window = pg.display.set_mode((w, h), pg.RESIZABLE)
             screen = pg.transform.scale(screen, (w, h))
     
+    dt = clock.tick(60)
     window_size = window.get_rect().size
 
-    game.update()
+    camera.update(dt, window_size)
+    game.update(dt)
     screen.fill(BG_COLOR)
     game.draw()
     # Render main surface after scaling it by the scale factor
+    window.fill(BG_COLOR)
     window.blit(
         pg.transform.scale(screen, (window_size[0]*W_SCALE[0], window_size[1]*W_SCALE[1])),
-        (0, 0)
+        (0,0),
+        (camera.x*W_SCALE[0], camera.y*W_SCALE[1], window.get_width(), window.get_height())
     )
     pg.display.flip()

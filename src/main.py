@@ -137,7 +137,7 @@ class Player:
         self.pos = [0,0]
         self.vel = [0,0]
         self.max_vel = 30
-        self.friction = 0.9
+        self.friction = 0.8
 
         # Sprites & Animation
         self.img_path = "/characters/gabe-idle-run.png"

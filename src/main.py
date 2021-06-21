@@ -16,6 +16,7 @@ font = pg.font.Font(rs_dir + "/m6x11.ttf", 64)
 class Camera:
     def __init__(self):
         self.pos = self.x, self.y = [0,0]
+        self.scale = self.scale_x, self.scale_y = 2, 2
         self.vel = [0,0]
         self.margin = 80
         self.max_vel = 50
@@ -23,7 +24,6 @@ class Camera:
         self.do_track = True
 
     def track(self, rect):
-        # print(rect[0] < self.x + 50)
         if self.do_track:
             # Horzontal tracking
             if rect[0] < self.x + self.margin:
@@ -42,8 +42,8 @@ class Camera:
         self.vel[0] = self.vel[0] if self.vel[0] < self.max_vel else self.max_vel
 
     def update(self, dt, window_size):
-        self.width = window_size[0] / W_SCALE[0]
-        self.height = window_size[1] / W_SCALE[1]
+        self.width = window_size[0] / self.scale_x
+        self.height = window_size[1] / self.scale_y
 
         # Move camera
         self.x += self.vel[0] / dt
@@ -254,8 +254,8 @@ while 1:
     # Render main surface after scaling it by the scale factor
     window.fill(BG_COLOR)
     window.blit(
-        pg.transform.scale(screen, (window_size[0]*W_SCALE[0], window_size[1]*W_SCALE[1])),
+        pg.transform.scale(screen, (window_size[0]*camera.scale_x, window_size[1]*camera.scale_y)),
         (0,0),
-        (camera.x*W_SCALE[0], camera.y*W_SCALE[1], window.get_width(), window.get_height())
+        (camera.x*camera.scale_x, camera.y*camera.scale_y, window.get_width(), window.get_height())
     )
     pg.display.flip()

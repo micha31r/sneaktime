@@ -105,6 +105,28 @@ class TiledMap:
                 rect = (img_x, img_y, tile_width, tile_height)
                 self.tileset.append(img.subsurface(rect))
 
+    def rect_collide(self, rect, target_layer_name=None):
+        x1 = rect[0]
+        y1 = rect[1]
+        w1 = rect[2]
+        h1 = rect[3]
+        for layer in self.data["layers"]:
+            if layer["type"] == "objectgroup":
+                if not target_layer_name or target_layer_name == layer["name"]:
+                    for obj in layer["objects"]:
+                        # Check for intersection
+                        x2 = obj["x"]
+                        y2 = obj["y"]
+                        w2 = obj["width"]
+                        h2 = obj["height"]
+                        if ((x1 < x2 and x1 + w1 > x2) or \
+                            (x1 < x2 + w2 and x1 + w1 > x2 + w2) or \
+                            (x1 > x2 and x1 + w1 < x2 + w2)) and \
+                            ((y1 < y2 and y1 + h1 > y2) or \
+                            (y1 < y2 + h2 and y1 + h1 > y2 + h2) or \
+                            (y1 > y2 and y1 + h1 < y2 + h2)):
+                            return True
+
     def update(self):
         pass
 
@@ -122,8 +144,8 @@ class TiledMap:
                     tx = 0
                     ty = 0
                     for tile_id in chunk["data"]:
-                        render_x = (cx + tx) * tilewidth # + (0-layer["startx"] * 16)
-                        render_y = (cy + ty) * tileheight # + (0-layer["starty"] * 16)
+                        render_x = (cx + tx) * tilewidth 
+                        render_y = (cy + ty) * tileheight
                         # means there is no tile
                         if tile_id != 0:
                             screen.blit(self.tileset[tile_id-1], (render_x, render_y, tilewidth, tileheight))
@@ -180,8 +202,22 @@ class Player:
             self.vel[1] = self.max_vel
 
         # Move player
-        self.pos[0] += self.vel[0] / dt
-        self.pos[1] += self.vel[1] / dt
+        x_vel = self.vel[0] / dt
+        y_vel = self.vel[1] / dt
+
+        # Horizontal collision
+        collision = game.tilemap.rect_collide((self.pos[0]+x_vel, self.pos[1], self.frame_width, self.frame_height))
+        if collision:
+            self.vel[0] = 0
+        else:
+            self.pos[0] += x_vel
+
+        # Vertical collision
+        collision = game.tilemap.rect_collide((self.pos[0], self.pos[1]+y_vel, self.frame_width, self.frame_height))
+        if collision:
+            self.vel[1] = 0
+        else:
+            self.pos[1] += y_vel
 
         # Decrease velocity
         self.vel[0] *= self.friction

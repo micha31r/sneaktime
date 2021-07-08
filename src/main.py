@@ -164,11 +164,17 @@ class Player:
         # Sprites & Animation
         self.img_path = "/characters/gabe-idle-run.png"
         self.frame_width, self.frame_height = 24, 24
-        self.idle_frames = [0]
-        self.movement_frames = [1,2,3,4,5,6]
-        self.animation_counter = 0
-        self.is_idle = True
+        self.frame_sets = {
+            "idle": {
+                "frames": [0]
+            },
+            "move": {
+                "frames": [1,2,3,4,5,6]
+            },
+        }
+        self.current_frame_set = "idle"
         self.current_frame_index = 0
+        self.animation_counter = 0
         self.load_frames()
 
     def load_frames(self):
@@ -183,12 +189,16 @@ class Player:
                 self.frames.append(img.subsurface(rect))
 
     def update(self, dt):
-        self.animation_counter += 1 / dt
-        if self.animation_counter > 1:
-            if self.is_idle:
+        # Update animation frames
+        self.animation_counter += 1
+        if self.animation_counter > 5:
+            max_frame = len(self.frame_sets[self.current_frame_set]["frames"])-1
+            if self.current_frame_index < max_frame:
                 self.current_frame_index += 1
-                if self.current_frame_index > len(self.idle_frames) - 1:
-                    self.current_frame_index = 0
+            else:
+                self.current_frame_index = 0
+            self.animation_counter = 0
+
 
         # Set initial velocities on keypress
         keys = pg.key.get_pressed()
@@ -224,18 +234,25 @@ class Player:
         self.vel[1] *= self.friction
 
         # Set velocity to 0 if too small
-        if abs(self.vel[0]) < 0.01:
+        if abs(self.vel[0]) < 0.05:
             self.vel[0] = 0
-        if abs(self.vel[1]) < 0.01:
+        if abs(self.vel[1]) < 0.05:
             self.vel[1] = 0
+
+        # Change animation
+        if max(abs(self.vel[0]), abs(self.vel[1])) > 1:
+            if self.current_frame_set != "move":
+                self.current_frame_index = 0
+                self.current_frame_set = "move"
+        else:
+            if self.current_frame_set != "idle":
+                self.current_frame_index = 0
+                self.current_frame_set = "idle"
 
         camera.track((self.pos[0], self.pos[1], self.frame_width, self.frame_height))
 
     def draw(self):
-        if self.is_idle:
-            img = self.frames[self.idle_frames[self.current_frame_index]]
-        else:
-            img = self.frames[self.movement_frames[self.current_frame_index]]
+        img = self.frames[self.frame_sets[self.current_frame_set]["frames"][self.current_frame_index]]
         screen.blit(img, self.pos)
 
 class Game:

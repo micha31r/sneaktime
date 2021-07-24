@@ -45,8 +45,8 @@ class Camera:
         self.pos = pg.Vector2()
         self.scale = pg.Vector2(1,1)
         self.vel = pg.Vector2()
-        self.margin = 128
-        self.max_vel = 120
+        self.margin = 120
+        self.max_vel = 300
         self.friction = 0.99
         self.do_track = True
 
@@ -73,8 +73,8 @@ class Camera:
         self.height = window_size[1] / self.scale.x
 
         # Move camera
-        self.pos.x += self.vel.x / dt
-        self.pos.y += self.vel.y / dt
+        self.pos.x += self.vel.x * dt
+        self.pos.y += self.vel.y * dt
 
         # Decrease velocity
         self.vel.x *= self.friction
@@ -211,12 +211,55 @@ class TiledMap:
                             tx = 0
                             ty += 1
 
+class ParticleManager:
+    def __init__(self):
+        self.particles = []
+
+    def add(self, p):
+        self.particles.append(p)
+
+    def update(self, dt):
+        for i, p in reversed(list(enumerate(self.particles))):
+            p.update(dt)
+            if p.can_be_terminated() == True:
+                del self.particles[i]
+
+    def draw(self):
+        for p in self.particles:
+            p.draw()
+
+class Bullet:
+    def __init__(self, x, y, angle):
+        self.pos = pg.Vector2(x,y)
+        self.vel = pg.Vector2(800,800)
+        self.angle = angle
+        self.lifespan_counter = 0
+
+    def update(self, dt):
+        rad = math.radians(self.angle)
+        self.pos.x += math.cos(rad) * self.vel.x * dt
+        self.pos.y += math.sin(rad) * self.vel.y * dt
+        self.lifespan_counter += 1
+
+    def can_be_terminated(self):
+        if self.lifespan_counter > 256:
+            return True
+
+    def draw(self):
+        pg.draw.circle(screen, (0,0,0), self.pos, 8)
+
 class Player:
     def __init__(self):
         self.pos = pg.Vector2()
         self.vel = pg.Vector2()
-        self.max_vel = 80
+        self.max_vel = 260
         self.friction = 0.8
+        self.controllable = True
+        self.mode = "move"
+
+        self.can_shoot = True
+        self.shoot_counter = 0
+        self.angle = 0
 
         # Sprites & Animation
         self.img_path = "/characters/circle.png"
@@ -245,6 +288,15 @@ class Player:
                 rect = (img_x, img_y, self.frame_width, self.frame_height)
                 self.frames.append(img.subsurface(rect))
 
+    def shoot(self):
+        if self.can_shoot:
+            game.particle_manager.add(Bullet(
+                self.pos.x + self.frame_width/2,
+                self.pos.y + self.frame_height/2,
+                self.angle
+            ))
+            self.can_shoot = False
+
     def update(self, dt):
         # Update animation frames
         self.animation_counter += 1
@@ -256,35 +308,60 @@ class Player:
                 self.current_frame_index = 0
             self.animation_counter = 0
 
+        # Update shoot counter
+        if not self.can_shoot:
+            self.shoot_counter += 1
+            if self.shoot_counter > 60:
+                self.can_shoot = True
+                self.shoot_counter = 0
 
         # Set initial velocities on keypress
-        keys = pg.key.get_pressed()
-        if keys[pg.K_LEFT]:
-            self.vel.x = -self.max_vel
-        elif keys[pg.K_RIGHT]:
-            self.vel.x = self.max_vel
-        if keys[pg.K_UP]:
-            self.vel.y = -self.max_vel
-        elif keys[pg.K_DOWN]:
-            self.vel.y = self.max_vel
+        if self.controllable:
+            keys = pg.key.get_pressed()
+
+            if self.can_shoot:
+                if keys[pg.K_SPACE]:
+                    self.mode = "aim"
+                elif self.mode == "aim": # If key is just released and the control mode hasn't changed
+                    self.shoot()
+                    self.mode = "move"
+
+            if self.mode == "move":
+                if keys[pg.K_LEFT]:
+                    self.vel.x = -self.max_vel
+                elif keys[pg.K_RIGHT]:
+                    self.vel.x = self.max_vel
+                if keys[pg.K_UP]:
+                    self.vel.y = -self.max_vel
+                elif keys[pg.K_DOWN]:
+                    self.vel.y = self.max_vel
+            elif self.mode == "aim":
+                if keys[pg.K_LEFT]:
+                    self.angle -= 200 * dt
+                elif keys[pg.K_RIGHT]:
+                    self.angle += 200 * dt
+                # Limit angle
+                if self.angle < 0:
+                    self.angle = 360 + self.angle
+                if self.angle > 360:
+                    self.angle = self.angle - 360
+        else:
+            if self.vel == [0,0]:
+                self.controllable = True
 
         # Move player
-        x_vel = self.vel.x / dt
-        y_vel = self.vel.y / dt
+        x_vel = self.vel.x * dt
+        y_vel = self.vel.y * dt
 
-        # Horizontal collision
-        collision = game.tilemap.poly_collide((self.pos[0]+x_vel, self.pos[1], self.frame_width, self.frame_height))
+        # Collision
+        collision = game.tilemap.poly_collide((self.pos.x+x_vel, self.pos.y+y_vel, self.frame_width, self.frame_height))
         if collision:
-            self.vel.x = 0
+            self.vel.x = -self.vel.x
+            self.vel.y = -self.vel.y
+            self.controllable = False
         else:
-            self.pos[0] += x_vel
-
-        # Vertical collision
-        collision = game.tilemap.poly_collide((self.pos[0], self.pos[1]+y_vel, self.frame_width, self.frame_height))
-        if collision:
-            self.vel.y = 0
-        else:
-            self.pos[1] += y_vel
+            self.pos.x += x_vel
+            self.pos.y += y_vel
 
         # Decrease velocity
         self.vel.x *= self.friction
@@ -306,11 +383,19 @@ class Player:
                 self.current_frame_index = 0
                 self.current_frame_set = "idle"
 
-        camera.track((self.pos[0], self.pos[1], self.frame_width, self.frame_height))
+        camera.track((self.pos.x, self.pos.y, self.frame_width, self.frame_height))
 
     def draw(self):
+        # Draw self
         img = self.frames[self.frame_sets[self.current_frame_set]["frames"][self.current_frame_index]]
         screen.blit(img, self.pos)
+        
+        if self.mode == "aim":
+            # Draw aiming lines
+            rad = math.radians(self.angle)
+            start_pos = pg.Vector2(self.pos.x + self.frame_width/2, self.pos.y + self.frame_height/2)
+            end_pos = pg.Vector2(start_pos.x + math.cos(rad)*500, start_pos.y + math.sin(rad)*500)
+            pg.draw.line(screen, (0,0,0), start_pos, end_pos)
 
 class Game:
     def __init__(self):
@@ -318,6 +403,7 @@ class Game:
         self.prev_mode = MODE
         self.tilemap = TiledMap()
         self.player = Player()
+        self.particle_manager = ParticleManager()
 
     def update(self, dt):
         mode_changed = False
@@ -331,6 +417,7 @@ class Game:
             if mode_changed:
                 self.player = Player()
             self.player.update(dt)
+            self.particle_manager.update(dt)
         self.prev_mode = MODE
 
     def draw(self):
@@ -339,6 +426,7 @@ class Game:
         if MODE == "main":
             self.tilemap.draw()
             self.player.draw()
+            self.particle_manager.draw()
 
 game = Game()
 camera = Camera()
@@ -353,7 +441,7 @@ while 1:
             h = 480 if h < 480 else h
             window = pg.display.set_mode((w, h), pg.RESIZABLE)
     
-    dt = clock.tick(60)
+    dt = clock.tick(60) / 1000
     window_size = window.get_rect().size
     screen_size = screen.get_rect().size
 

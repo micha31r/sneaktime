@@ -1,6 +1,7 @@
 import sys, json, math
 import pygame as pg
 from os import path
+from collision import *
 
 
 ####################
@@ -13,7 +14,7 @@ BASE_DIR = path.dirname(__file__)
 # Settings
 W_SIZE = W_WIDTH, W_HEIGHT = 640, 480
 MODE = "main"
-BG_COLOR = (115,3,252)
+BG_COLOR = (200,200,200)
 rs_dir = path.join(BASE_DIR, "resources")
 
 # Initialize pygame
@@ -112,8 +113,9 @@ class SplashScreen:
 
 class TiledMap:
     def __init__(self):
-        self.load_tilemap();
-        self.load_tileset();
+        self.load_tilemap()
+        self.load_tileset()
+        self.load_polygons()
 
     def load_tilemap(self):
         f = open(rs_dir + "/tilemap.json")
@@ -153,6 +155,35 @@ class TiledMap:
                             (y1 > y2 and y1 + h1 < y2 + h2)):
                             return True
 
+    def load_polygons(self):
+        v = Vector
+        self.polygons = {}
+        for layer in self.data["layers"]:
+            if layer["type"] == "objectgroup":
+                polys = []
+                for obj in layer["objects"]:
+                    if "polygon" in obj:
+                        points = []
+                        for p in obj["polygon"]:
+                            points.append(v(p["x"], p["y"]))
+                        polys.append(Concave_Poly(v(obj["x"],obj["y"]), points))
+                if polys:
+                    self.polygons[layer["name"]] = polys
+
+
+    def poly_collide(self, rect, target_layer_name=None):
+        v = Vector
+        x1 = rect[0] + 32
+        y1 = rect[1] + 32
+        # w1 = rect[2]
+        # h1 = rect[3]
+        p1 = Circle(v(x1,y1), 32)
+        for layer_name, items in self.polygons.items():
+            if not target_layer_name or target_layer_name == layer_name:
+                for p2 in items:
+                    if collide(p1, p2):
+                        return True
+
     def update(self):
         pass
 
@@ -161,7 +192,7 @@ class TiledMap:
         tilewidth = data["tilewidth"]
         tileheight = data["tileheight"]
         for layer in data["layers"]:
-            if layer["type"] == "tilelayer":
+            if layer["visible"] == True and layer["type"] == "tilelayer":
                 for chunk in layer["chunks"]:
                     cw = chunk["width"]
                     ch = chunk["height"]
@@ -242,14 +273,14 @@ class Player:
         y_vel = self.vel.y / dt
 
         # Horizontal collision
-        collision = game.tilemap.rect_collide((self.pos[0]+x_vel, self.pos[1], self.frame_width, self.frame_height))
+        collision = game.tilemap.poly_collide((self.pos[0]+x_vel, self.pos[1], self.frame_width, self.frame_height))
         if collision:
             self.vel.x = 0
         else:
             self.pos[0] += x_vel
 
         # Vertical collision
-        collision = game.tilemap.rect_collide((self.pos[0], self.pos[1]+y_vel, self.frame_width, self.frame_height))
+        collision = game.tilemap.poly_collide((self.pos[0], self.pos[1]+y_vel, self.frame_width, self.frame_height))
         if collision:
             self.vel.y = 0
         else:

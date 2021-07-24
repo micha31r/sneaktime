@@ -1,63 +1,89 @@
 import sys, json, math
 import pygame as pg
 from os import path
-from settings import *
-from utils import *
 
-pg.init()
-pg.display.set_caption("Top Down Game Template")
-window = pg.display.set_mode(W_SIZE, pg.RESIZABLE)
-screen = pg.Surface(W_SIZE)
-clock = pg.time.Clock()
 
+####################
+# Setup
+####################
+
+
+BASE_DIR = path.dirname(__file__)
+
+# Settings
+W_SIZE = W_WIDTH, W_HEIGHT = 640, 480
+MODE = "main"
+BG_COLOR = (115,3,252)
 rs_dir = path.join(BASE_DIR, "resources")
+
+# Initialize pygame
+pg.init()
+pg.display.set_caption("Gravity")
+window = pg.display.set_mode(W_SIZE, pg.RESIZABLE)
+screen = pg.Surface((640*2,480*2))
+clock = pg.time.Clock()
 font = pg.font.Font(rs_dir + "/m6x11.ttf", 64)
+
+
+####################
+# Scripts
+####################
+
+
+def center(w1, h1, w2, h2):
+    return ((w2-w1)/2, (h2-h1)/2)
+
+
+####################
+# Main Code
+####################
+
 
 class Camera:
     def __init__(self):
-        self.pos = self.x, self.y = [0,0]
-        self.scale = self.scale_x, self.scale_y = 2, 2
-        self.vel = [0,0]
-        self.margin = 80
-        self.max_vel = 50
+        self.pos = pg.Vector2()
+        self.scale = pg.Vector2(1,1)
+        self.vel = pg.Vector2()
+        self.margin = 128
+        self.max_vel = 120
         self.friction = 0.99
         self.do_track = True
 
     def track(self, rect):
         if self.do_track:
             # Horzontal tracking
-            if rect[0] < self.x + self.margin:
-                self.vel[0] = rect[0] - (self.x + self.margin)
-            if rect[0] + rect[2] > self.x + self.width - self.margin:
-                self.vel[0] = (rect[0] + rect[2]) - (self.x + self.width - self.margin)
+            if rect[0] < self.pos.x + self.margin:
+                self.vel.x = rect[0] - (self.pos.x + self.margin)
+            if rect[0] + rect[2] > self.pos.x + self.width - self.margin:
+                self.vel.x = (rect[0] + rect[2]) - (self.pos.x + self.width - self.margin)
 
             # Verticle tracking
-            if rect[1] < self.y + self.margin:
-                self.vel[1] = rect[1] - (self.y + self.margin)
-            if rect[1] + rect[3] > self.y + self.height - self.margin:
-                self.vel[1] = (rect[1] + rect[3]) - (self.y + self.height - self.margin)
+            if rect[1] < self.pos.y + self.margin:
+                self.vel.y = rect[1] - (self.pos.y + self.margin)
+            if rect[1] + rect[3] > self.pos.y + self.height - self.margin:
+                self.vel.y = (rect[1] + rect[3]) - (self.pos.y + self.height - self.margin)
 
         # Set max velocity
-        self.vel[0] = self.vel[0] if self.vel[0] > -self.max_vel else -self.max_vel
-        self.vel[0] = self.vel[0] if self.vel[0] < self.max_vel else self.max_vel
+        self.vel.x = self.vel.x if self.vel.x > -self.max_vel else -self.max_vel
+        self.vel.x = self.vel.x if self.vel.x < self.max_vel else self.max_vel
 
     def update(self, dt, window_size):
-        self.width = window_size[0] / self.scale_x
-        self.height = window_size[1] / self.scale_y
+        self.width = window_size[0] / self.scale.x
+        self.height = window_size[1] / self.scale.x
 
         # Move camera
-        self.x += self.vel[0] / dt
-        self.y += self.vel[1] / dt
+        self.pos.x += self.vel.x / dt
+        self.pos.y += self.vel.y / dt
 
         # Decrease velocity
-        self.vel[0] *= self.friction
-        self.vel[1] *= self.friction
+        self.vel.x *= self.friction
+        self.vel.y *= self.friction
 
         # Set velocity to 0 if too small
-        if abs(self.vel[0]) < 0.01:
-            self.vel[0] = 0
-        if abs(self.vel[1]) < 0.01:
-            self.vel[1] = 0
+        if abs(self.vel.x) < 0.01:
+            self.vel.x = 0
+        if abs(self.vel.y) < 0.01:
+            self.vel.y = 0
 
 
 class SplashScreen:
@@ -83,7 +109,7 @@ class SplashScreen:
     def draw(self):
         screen.blit(self.text, center(*self.rect[2:4], *W_SIZE))
 
-# https://bakudas.itch.io/generic-rpg-pack
+
 class TiledMap:
     def __init__(self):
         self.load_tilemap();
@@ -94,7 +120,7 @@ class TiledMap:
         self.data = json.load(f)
 
     def load_tileset(self):
-        img = pg.image.load(rs_dir + "/tileset.png")
+        img = pg.image.load(rs_dir + "/tilesheet.png")
         img_width, img_height = img.get_size()
         tile_width, tile_height = self.data["tilewidth"], self.data["tileheight"]
         self.tileset = []
@@ -156,20 +182,20 @@ class TiledMap:
 
 class Player:
     def __init__(self):
-        self.pos = [0,0]
-        self.vel = [0,0]
-        self.max_vel = 30
+        self.pos = pg.Vector2()
+        self.vel = pg.Vector2()
+        self.max_vel = 80
         self.friction = 0.8
 
         # Sprites & Animation
-        self.img_path = "/characters/gabe-idle-run.png"
-        self.frame_width, self.frame_height = 24, 24
+        self.img_path = "/characters/circle.png"
+        self.frame_width, self.frame_height = 64, 64
         self.frame_sets = {
             "idle": {
                 "frames": [0]
             },
             "move": {
-                "frames": [1,2,3,4,5,6]
+                "frames": [0]
             },
         }
         self.current_frame_set = "idle"
@@ -203,44 +229,44 @@ class Player:
         # Set initial velocities on keypress
         keys = pg.key.get_pressed()
         if keys[pg.K_LEFT]:
-            self.vel[0] = -self.max_vel
+            self.vel.x = -self.max_vel
         elif keys[pg.K_RIGHT]:
-            self.vel[0] = self.max_vel
+            self.vel.x = self.max_vel
         if keys[pg.K_UP]:
-            self.vel[1] = -self.max_vel
+            self.vel.y = -self.max_vel
         elif keys[pg.K_DOWN]:
-            self.vel[1] = self.max_vel
+            self.vel.y = self.max_vel
 
         # Move player
-        x_vel = self.vel[0] / dt
-        y_vel = self.vel[1] / dt
+        x_vel = self.vel.x / dt
+        y_vel = self.vel.y / dt
 
         # Horizontal collision
         collision = game.tilemap.rect_collide((self.pos[0]+x_vel, self.pos[1], self.frame_width, self.frame_height))
         if collision:
-            self.vel[0] = 0
+            self.vel.x = 0
         else:
             self.pos[0] += x_vel
 
         # Vertical collision
         collision = game.tilemap.rect_collide((self.pos[0], self.pos[1]+y_vel, self.frame_width, self.frame_height))
         if collision:
-            self.vel[1] = 0
+            self.vel.y = 0
         else:
             self.pos[1] += y_vel
 
         # Decrease velocity
-        self.vel[0] *= self.friction
-        self.vel[1] *= self.friction
+        self.vel.x *= self.friction
+        self.vel.y *= self.friction
 
         # Set velocity to 0 if too small
-        if abs(self.vel[0]) < 0.05:
-            self.vel[0] = 0
-        if abs(self.vel[1]) < 0.05:
-            self.vel[1] = 0
+        if abs(self.vel.x) < 0.05:
+            self.vel.x = 0
+        if abs(self.vel.y) < 0.05:
+            self.vel.y = 0
 
         # Change animation
-        if max(abs(self.vel[0]), abs(self.vel[1])) > 1:
+        if max(abs(self.vel.x), abs(self.vel.y)) > 1:
             if self.current_frame_set != "move":
                 self.current_frame_index = 0
                 self.current_frame_set = "move"
@@ -295,10 +321,10 @@ while 1:
             w = 640 if w < 640 else w
             h = 480 if h < 480 else h
             window = pg.display.set_mode((w, h), pg.RESIZABLE)
-            screen = pg.transform.scale(screen, (w, h))
     
     dt = clock.tick(60)
     window_size = window.get_rect().size
+    screen_size = screen.get_rect().size
 
     camera.update(dt, window_size)
     game.update(dt)
@@ -307,8 +333,8 @@ while 1:
     # Render main surface after scaling it by the scale factor
     window.fill(BG_COLOR)
     window.blit(
-        pg.transform.scale(screen, (window_size[0]*camera.scale_x, window_size[1]*camera.scale_y)),
+        pg.transform.scale(screen, (int(screen_size[0]*camera.scale.x), int(screen_size[1]*camera.scale.x))),
         (0,0),
-        (camera.x*camera.scale_x, camera.y*camera.scale_y, window.get_width(), window.get_height())
+        (camera.pos.x*camera.scale.x, camera.pos.y*camera.scale.x, window.get_width(), window.get_height())
     )
     pg.display.flip()

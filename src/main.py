@@ -1,4 +1,4 @@
-import sys, json, math
+import sys, json, math, random
 import pygame as pg
 from os import path
 from collision import *
@@ -230,33 +230,63 @@ class ParticleManager:
     def update(self, dt):
         for i, p in reversed(list(enumerate(self.particles))):
             p.update(dt)
-            if p.can_be_terminated() == True:
+            if p.is_dead() == True:
                 del self.particles[i]
 
     def draw(self):
         for p in self.particles:
             p.draw()
 
+class Particle:
+    def __init__(self, x, y):
+        self.pos = pg.Vector2(x,y)
+        self.speed = random.randint(200,400)
+        self.radius = random.randint(4,8)
+        self.angle = random.randint(0, 360)
+        self.lifespan = random.randint(20, 40)
+        self.counter = 0
+
+    def is_dead(self):
+        if self.counter > self.lifespan:
+            return True
+
+    def update(self, dt):
+        rad = math.radians(self.angle)
+        self.pos.x += math.cos(rad) * self.speed * dt
+        self.pos.y += math.sin(rad) * self.speed * dt
+        self.counter += 1
+        self.radius -= self.radius / self.lifespan
+
+    def draw(self):
+        pg.draw.circle(screen, (128,35,255), self.pos, self.radius)
+
 class Bullet:
     def __init__(self, x, y, angle):
         self.pos = pg.Vector2(x,y)
-        self.vel = pg.Vector2(800,800)
-        self.radius = 8
+        self.speed = 800
+        self.radius = 10
         self.angle = angle
-        self.lifespan_counter = 0
+        self.lifespan = 200
+        self.counter = 0
         self.collided = False
 
     def update(self, dt):
         rad = math.radians(self.angle)
-        self.pos.x += math.cos(rad) * self.vel.x * dt
-        self.pos.y += math.sin(rad) * self.vel.y * dt
-        self.lifespan_counter += 1
+        self.pos.x += math.cos(rad) * self.speed * dt
+        self.pos.y += math.sin(rad) * self.speed * dt
+        self.counter += 1
+        # Collision with the map
         p1 = Circle(Vector(*self.pos), self.radius)
         if game.tilemap.poly_collide(p1):
             self.collided = True
 
-    def can_be_terminated(self):
-        if self.collided or self.lifespan_counter > 256:
+    def create_particles(self):
+        for i in range(random.randint(5,10)):
+            game.particle_manager.add(Particle(*self.pos))
+
+    def is_dead(self):
+        if self.collided or self.counter > self.lifespan:
+            self.create_particles();
             return True
 
     def draw(self):
@@ -408,6 +438,7 @@ class Player:
             start_pos = pg.Vector2(self.pos.x + self.frame_width/2, self.pos.y + self.frame_height/2)
             end_pos = pg.Vector2(start_pos.x + math.cos(rad)*500, start_pos.y + math.sin(rad)*500)
             pg.draw.line(screen, (128,35,255), start_pos, end_pos, 2)
+            pg.draw.circle(screen, (128,35,255), end_pos, 5)
 
         # Draw self
         img = self.frames[self.frame_sets[self.current_frame_set]["frames"][self.current_frame_index]]

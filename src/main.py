@@ -175,13 +175,7 @@ class TiledMap:
                     self.polygons[layer["name"]] = polys
 
 
-    def poly_collide(self, rect, target_layer_name=None):
-        v = Vector
-        x1 = rect[0] + 32
-        y1 = rect[1] + 32
-        # w1 = rect[2]
-        # h1 = rect[3]
-        p1 = Circle(v(x1,y1), 32)
+    def poly_collide(self, p1, target_layer_name=None, capture_all=False):
         # Must capture all collisions for r.overlap_v to work,
         # otherwise 'a' will tunnel into 'b' while responding collision with 'c'
         all_collisions = []
@@ -193,7 +187,10 @@ class TiledMap:
                     if collide(p1, p2, response=r):
                         # Calculate the collision angle
                         # angle = round(math.atan2(*r.overlap_n)*180/math.pi)
-                        all_collisions.append(r.overlap_v)
+                        if capture_all:
+                            all_collisions.append(r.overlap_v)
+                        else:
+                            return r.overlap_v
         return all_collisions or None
 
     def update(self):
@@ -244,21 +241,26 @@ class Bullet:
     def __init__(self, x, y, angle):
         self.pos = pg.Vector2(x,y)
         self.vel = pg.Vector2(800,800)
+        self.radius = 8
         self.angle = angle
         self.lifespan_counter = 0
+        self.collided = False
 
     def update(self, dt):
         rad = math.radians(self.angle)
         self.pos.x += math.cos(rad) * self.vel.x * dt
         self.pos.y += math.sin(rad) * self.vel.y * dt
         self.lifespan_counter += 1
+        p1 = Circle(Vector(*self.pos), self.radius)
+        if game.tilemap.poly_collide(p1):
+            self.collided = True
 
     def can_be_terminated(self):
-        if self.lifespan_counter > 256:
+        if self.collided or self.lifespan_counter > 256:
             return True
 
     def draw(self):
-        pg.draw.circle(screen, (0,0,0), self.pos, 8)
+        pg.draw.circle(screen, (128,35,255), self.pos, self.radius)
 
 class Player:
     def __init__(self):
@@ -356,14 +358,19 @@ class Player:
             if self.angle > 360:
                 self.angle = self.angle - 360
 
-        # Move player
+        # Player collision and movement
         dx = self.vel.x * dt
         dy = self.vel.y * dt
 
-        # Collision
         self.pos.x += dx
         self.pos.y += dy
-        all_collisions = game.tilemap.poly_collide((self.pos.x, self.pos.y, self.frame_width, self.frame_height))
+
+        # Create collision object
+        x1 = self.pos.x + self.frame_width / 2
+        y1 = self.pos.y + self.frame_height / 2
+        p1 = Circle(Vector(x1,y1), 32)
+
+        all_collisions = game.tilemap.poly_collide(p1, capture_all=True)
         if all_collisions:
             for c in all_collisions:
                 self.pos.x -= c.x
@@ -395,16 +402,16 @@ class Player:
         camera.track((self.pos.x, self.pos.y, self.frame_width, self.frame_height))
 
     def draw(self):
-        # Draw self
-        img = self.frames[self.frame_sets[self.current_frame_set]["frames"][self.current_frame_index]]
-        screen.blit(img, self.pos)
-        
         if self.mode == "aim":
             # Draw aiming lines
             rad = math.radians(self.angle)
             start_pos = pg.Vector2(self.pos.x + self.frame_width/2, self.pos.y + self.frame_height/2)
             end_pos = pg.Vector2(start_pos.x + math.cos(rad)*500, start_pos.y + math.sin(rad)*500)
-            pg.draw.line(screen, (0,0,0), start_pos, end_pos)
+            pg.draw.line(screen, (128,35,255), start_pos, end_pos, 2)
+
+        # Draw self
+        img = self.frames[self.frame_sets[self.current_frame_set]["frames"][self.current_frame_index]]
+        screen.blit(img, self.pos)
 
 class Game:
     def __init__(self):

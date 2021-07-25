@@ -46,27 +46,30 @@ class Camera:
         self.scale = pg.Vector2(1,1)
         self.vel = pg.Vector2()
         self.margin = 120
-        self.max_vel = 300
+        self.max_vel = 400
         self.friction = 0.99
         self.do_track = True
+        self.multiplier = 4
 
     def track(self, rect):
         if self.do_track:
             # Horzontal tracking
             if rect[0] < self.pos.x + self.margin:
-                self.vel.x = rect[0] - (self.pos.x + self.margin)
+                self.vel.x = (rect[0] - (self.pos.x + self.margin)) * self.multiplier
             if rect[0] + rect[2] > self.pos.x + self.width - self.margin:
-                self.vel.x = (rect[0] + rect[2]) - (self.pos.x + self.width - self.margin)
+                self.vel.x = ((rect[0] + rect[2]) - (self.pos.x + self.width - self.margin)) * self.multiplier
 
             # Verticle tracking
             if rect[1] < self.pos.y + self.margin:
-                self.vel.y = rect[1] - (self.pos.y + self.margin)
+                self.vel.y = (rect[1] - (self.pos.y + self.margin)) * self.multiplier
             if rect[1] + rect[3] > self.pos.y + self.height - self.margin:
-                self.vel.y = (rect[1] + rect[3]) - (self.pos.y + self.height - self.margin)
+                self.vel.y = ((rect[1] + rect[3]) - (self.pos.y + self.height - self.margin)) * self.multiplier
 
         # Set max velocity
         self.vel.x = self.vel.x if self.vel.x > -self.max_vel else -self.max_vel
         self.vel.x = self.vel.x if self.vel.x < self.max_vel else self.max_vel
+        self.vel.y = self.vel.y if self.vel.y < self.max_vel else self.max_vel
+        self.vel.y = self.vel.y if self.vel.y < self.max_vel else self.max_vel
 
     def update(self, dt, window_size):
         self.width = window_size[0] / self.scale.x

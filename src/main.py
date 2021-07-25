@@ -46,7 +46,7 @@ class Camera:
         self.scale = pg.Vector2(1,1)
         self.vel = pg.Vector2()
         self.margin = 120
-        self.max_vel = 400
+        self.madx = 400
         self.friction = 0.99
         self.do_track = True
         self.multiplier = 4
@@ -66,10 +66,10 @@ class Camera:
                 self.vel.y = ((rect[1] + rect[3]) - (self.pos.y + self.height - self.margin)) * self.multiplier
 
         # Set max velocity
-        self.vel.x = self.vel.x if self.vel.x > -self.max_vel else -self.max_vel
-        self.vel.x = self.vel.x if self.vel.x < self.max_vel else self.max_vel
-        self.vel.y = self.vel.y if self.vel.y < self.max_vel else self.max_vel
-        self.vel.y = self.vel.y if self.vel.y < self.max_vel else self.max_vel
+        self.vel.x = self.vel.x if self.vel.x > -self.madx else -self.madx
+        self.vel.x = self.vel.x if self.vel.x < self.madx else self.madx
+        self.vel.y = self.vel.y if self.vel.y < self.madx else self.madx
+        self.vel.y = self.vel.y if self.vel.y < self.madx else self.madx
 
     def update(self, dt, window_size):
         self.width = window_size[0] / self.scale.x
@@ -158,6 +158,7 @@ class TiledMap:
                             (y1 > y2 and y1 + h1 < y2 + h2)):
                             return True
 
+    # All polygons must be convex
     def load_polygons(self):
         v = Vector
         self.polygons = {}
@@ -169,7 +170,7 @@ class TiledMap:
                         points = []
                         for p in obj["polygon"]:
                             points.append(v(p["x"], p["y"]))
-                        polys.append(Concave_Poly(v(obj["x"],obj["y"]), points))
+                        polys.append(Poly(v(obj["x"],obj["y"]), points))
                 if polys:
                     self.polygons[layer["name"]] = polys
 
@@ -181,11 +182,19 @@ class TiledMap:
         # w1 = rect[2]
         # h1 = rect[3]
         p1 = Circle(v(x1,y1), 32)
+        # Must capture all collisions for r.overlap_v to work,
+        # otherwise 'a' will tunnel into 'b' while responding collision with 'c'
+        all_collisions = []
         for layer_name, items in self.polygons.items():
             if not target_layer_name or target_layer_name == layer_name:
                 for p2 in items:
-                    if collide(p1, p2):
-                        return True
+                    # Collision responses are only supported for convex polygons
+                    r = Response()
+                    if collide(p1, p2, response=r):
+                        # Calculate the collision angle
+                        # angle = round(math.atan2(*r.overlap_n)*180/math.pi)
+                        all_collisions.append(r.overlap_v)
+        return all_collisions or None
 
     def update(self):
         pass
@@ -255,9 +264,8 @@ class Player:
     def __init__(self):
         self.pos = pg.Vector2()
         self.vel = pg.Vector2()
-        self.max_vel = 260
+        self.madx = 260
         self.friction = 0.8
-        self.controllable = True
         self.mode = "move"
 
         self.can_shoot = True
@@ -319,52 +327,50 @@ class Player:
                 self.shoot_counter = 0
 
         # Set initial velocities on keypress
-        if self.controllable:
-            keys = pg.key.get_pressed()
+        keys = pg.key.get_pressed()
 
-            if self.can_shoot:
-                if keys[pg.K_SPACE]:
-                    self.mode = "aim"
-                elif self.mode == "aim": # If key is just released and the control mode hasn't changed
-                    self.shoot()
-                    self.mode = "move"
+        if self.can_shoot:
+            if keys[pg.K_SPACE]:
+                self.mode = "aim"
+            elif self.mode == "aim": # If key is just released and the control mode hasn't changed
+                self.shoot()
+                self.mode = "move"
 
-            if self.mode == "move":
-                if keys[pg.K_LEFT]:
-                    self.vel.x = -self.max_vel
-                elif keys[pg.K_RIGHT]:
-                    self.vel.x = self.max_vel
-                if keys[pg.K_UP]:
-                    self.vel.y = -self.max_vel
-                elif keys[pg.K_DOWN]:
-                    self.vel.y = self.max_vel
-            elif self.mode == "aim":
-                if keys[pg.K_LEFT]:
-                    self.angle -= 200 * dt
-                elif keys[pg.K_RIGHT]:
-                    self.angle += 200 * dt
-                # Limit angle
-                if self.angle < 0:
-                    self.angle = 360 + self.angle
-                if self.angle > 360:
-                    self.angle = self.angle - 360
-        else:
-            if self.vel == [0,0]:
-                self.controllable = True
+        if self.mode == "move":
+            if keys[pg.K_LEFT]:
+                self.vel.x = -self.madx
+            elif keys[pg.K_RIGHT]:
+                self.vel.x = self.madx
+            if keys[pg.K_UP]:
+                self.vel.y = -self.madx
+            elif keys[pg.K_DOWN]:
+                self.vel.y = self.madx
+        elif self.mode == "aim":
+            if keys[pg.K_LEFT]:
+                self.angle -= 200 * dt
+            elif keys[pg.K_RIGHT]:
+                self.angle += 200 * dt
+            # Limit angle
+            if self.angle < 0:
+                self.angle = 360 + self.angle
+            if self.angle > 360:
+                self.angle = self.angle - 360
 
         # Move player
-        x_vel = self.vel.x * dt
-        y_vel = self.vel.y * dt
+        dx = self.vel.x * dt
+        dy = self.vel.y * dt
 
         # Collision
-        collision = game.tilemap.poly_collide((self.pos.x+x_vel, self.pos.y+y_vel, self.frame_width, self.frame_height))
-        if collision:
-            self.vel.x = -self.vel.x
-            self.vel.y = -self.vel.y
-            self.controllable = False
-        else:
-            self.pos.x += x_vel
-            self.pos.y += y_vel
+        self.pos.x += dx
+        self.pos.y += dy
+        all_collisions = game.tilemap.poly_collide((self.pos.x, self.pos.y, self.frame_width, self.frame_height))
+        if all_collisions:
+            for c in all_collisions:
+                self.pos.x -= c.x
+                self.pos.y -= c.y
+                # pass
+            self.vel.x = 0
+            self.vel.y = 0
 
         # Decrease velocity
         self.vel.x *= self.friction

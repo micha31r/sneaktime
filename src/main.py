@@ -13,6 +13,7 @@ BASE_DIR = path.dirname(__file__)
 
 # Settings
 W_SIZE = W_WIDTH, W_HEIGHT = 640, 480
+WORLD_SIZE = (640*3, 480*3)
 MODE = "main"
 BG_COLOR = (200,200,200)
 rs_dir = path.join(BASE_DIR, "resources")
@@ -21,7 +22,7 @@ rs_dir = path.join(BASE_DIR, "resources")
 pg.init()
 pg.display.set_caption("Gravity")
 window = pg.display.set_mode(W_SIZE, pg.RESIZABLE)
-screen = pg.Surface((640*2,480*2))
+screen = pg.Surface(WORLD_SIZE)
 clock = pg.time.Clock()
 font = pg.font.Font(rs_dir + "/m6x11.ttf", 64)
 
@@ -46,30 +47,34 @@ class Camera:
         self.scale = pg.Vector2(1,1)
         self.vel = pg.Vector2()
         self.margin = 120
-        self.madx = 400
-        self.friction = 0.99
+        self.max_vel = 400
+        self.friction = 0.8
         self.do_track = True
         self.multiplier = 4
 
     def track(self, rect):
         if self.do_track:
             # Horzontal tracking
-            if rect[0] < self.pos.x + self.margin:
-                self.vel.x = (rect[0] - (self.pos.x + self.margin)) * self.multiplier
-            if rect[0] + rect[2] > self.pos.x + self.width - self.margin:
-                self.vel.x = ((rect[0] + rect[2]) - (self.pos.x + self.width - self.margin)) * self.multiplier
+            a = self.pos.x + self.margin
+            if rect[0] < a:
+                self.vel.x = (rect[0] - a) * self.multiplier
+            b = self.pos.x + self.width - self.margin
+            if rect[0] + rect[2] > b:
+                self.vel.x = ((rect[0] + rect[2]) - b) * self.multiplier
 
             # Verticle tracking
-            if rect[1] < self.pos.y + self.margin:
-                self.vel.y = (rect[1] - (self.pos.y + self.margin)) * self.multiplier
-            if rect[1] + rect[3] > self.pos.y + self.height - self.margin:
-                self.vel.y = ((rect[1] + rect[3]) - (self.pos.y + self.height - self.margin)) * self.multiplier
+            c = self.pos.y + self.margin
+            if rect[1] < c:
+                self.vel.y = (rect[1] - c) * self.multiplier
+            d = self.pos.y + self.height - self.margin
+            if rect[1] + rect[3] > d:
+                self.vel.y = ((rect[1] + rect[3]) - d) * self.multiplier
 
         # Set max velocity
-        self.vel.x = self.vel.x if self.vel.x > -self.madx else -self.madx
-        self.vel.x = self.vel.x if self.vel.x < self.madx else self.madx
-        self.vel.y = self.vel.y if self.vel.y < self.madx else self.madx
-        self.vel.y = self.vel.y if self.vel.y < self.madx else self.madx
+        self.vel.x = self.vel.x if self.vel.x > -self.max_vel else -self.max_vel
+        self.vel.x = self.vel.x if self.vel.x < self.max_vel else self.max_vel
+        self.vel.y = self.vel.y if self.vel.y < self.max_vel else self.max_vel
+        self.vel.y = self.vel.y if self.vel.y < self.max_vel else self.max_vel
 
     def update(self, dt, window_size):
         self.width = window_size[0] / self.scale.x
@@ -116,16 +121,21 @@ class SplashScreen:
 
 class TiledMap:
     def __init__(self):
+        self.spawner_tiles = {
+            "player": 41
+        }
+
         self.load_tilemap()
         self.load_tileset()
         self.load_polygons()
+        self.load_tiles()
 
     def load_tilemap(self):
         f = open(rs_dir + "/tilemap.json")
         self.data = json.load(f)
 
     def load_tileset(self):
-        img = pg.image.load(rs_dir + "/tilesheet.png")
+        img = pg.image.load(rs_dir + "/tilesheet.png").convert_alpha()
         img_width, img_height = img.get_size()
         tile_width, tile_height = self.data["tilewidth"], self.data["tileheight"]
         self.tileset = []
@@ -135,6 +145,59 @@ class TiledMap:
                 img_x = tile_x * tile_width
                 rect = (img_x, img_y, tile_width, tile_height)
                 self.tileset.append(img.subsurface(rect))
+
+    # All polygons must be convex
+    def load_polygons(self):
+        v = Vector
+        self.polygons = {}
+        for layer in self.data["layers"]:
+            if layer["type"] == "objectgroup":
+                polys = []
+                for obj in layer["objects"]:
+                    if "polygon" in obj:
+                        points = []
+                        for p in obj["polygon"]:
+                            points.append(v(p["x"], p["y"]))
+                        polys.append(Poly(v(obj["x"],obj["y"]), points))
+                if polys:
+                    self.polygons[layer["name"]] = polys
+
+    def load_tiles(self):
+        self.spawners = {}
+        self.tiles = []
+        data = self.data
+        tilewidth = data["tilewidth"]
+        tileheight = data["tileheight"]
+        for layer in data["layers"]:
+            if layer["type"] == "tilelayer":
+                for chunk in layer["chunks"]:
+                    cw = chunk["width"]
+                    ch = chunk["height"]
+                    cx = chunk["x"]
+                    cy = chunk["y"]
+                    tx = 0
+                    ty = 0
+                    for tile_id in chunk["data"]:
+                        render_x = (cx + tx) * tilewidth 
+                        render_y = (cy + ty) * tileheight
+                        # means there is no tile
+                        if tile_id != 0:
+                            rect = (render_x, render_y, tilewidth, tileheight)
+                            if layer["visible"]:
+                                self.tiles.append({
+                                    "img": self.tileset[tile_id-1],
+                                    "rect": rect
+                                })
+                            else:
+                                for k, v in self.spawner_tiles.items():
+                                    if tile_id == v:
+                                        if k not in self.spawners:
+                                            self.spawners[k] = []
+                                        self.spawners[k].append(rect)
+                        tx += 1
+                        if tx == cw:
+                            tx = 0
+                            ty += 1
 
     def rect_collide(self, rect, target_layer_name=None):
         x1 = rect[0]
@@ -158,23 +221,6 @@ class TiledMap:
                             (y1 > y2 and y1 + h1 < y2 + h2)):
                             return True
 
-    # All polygons must be convex
-    def load_polygons(self):
-        v = Vector
-        self.polygons = {}
-        for layer in self.data["layers"]:
-            if layer["type"] == "objectgroup":
-                polys = []
-                for obj in layer["objects"]:
-                    if "polygon" in obj:
-                        points = []
-                        for p in obj["polygon"]:
-                            points.append(v(p["x"], p["y"]))
-                        polys.append(Poly(v(obj["x"],obj["y"]), points))
-                if polys:
-                    self.polygons[layer["name"]] = polys
-
-
     def poly_collide(self, p1, target_layer_name=None, capture_all=False):
         # Must capture all collisions for r.overlap_v to work,
         # otherwise 'a' will tunnel into 'b' while responding collision with 'c'
@@ -197,28 +243,9 @@ class TiledMap:
         pass
 
     def draw(self):
-        data = self.data
-        tilewidth = data["tilewidth"]
-        tileheight = data["tileheight"]
-        for layer in data["layers"]:
-            if layer["visible"] == True and layer["type"] == "tilelayer":
-                for chunk in layer["chunks"]:
-                    cw = chunk["width"]
-                    ch = chunk["height"]
-                    cx = chunk["x"]
-                    cy = chunk["y"]
-                    tx = 0
-                    ty = 0
-                    for tile_id in chunk["data"]:
-                        render_x = (cx + tx) * tilewidth 
-                        render_y = (cy + ty) * tileheight
-                        # means there is no tile
-                        if tile_id != 0:
-                            screen.blit(self.tileset[tile_id-1], (render_x, render_y, tilewidth, tileheight))
-                        tx += 1
-                        if tx == cw:
-                            tx = 0
-                            ty += 1
+        for t in self.tiles:
+            screen.blit(t["img"], t["rect"])
+
 
 class ParticleManager:
     def __init__(self):
@@ -237,13 +264,14 @@ class ParticleManager:
         for p in self.particles:
             p.draw()
 
+
 class Particle:
     def __init__(self, x, y):
         self.pos = pg.Vector2(x,y)
         self.speed = random.randint(200,400)
         self.radius = random.randint(4,8)
         self.angle = random.randint(0, 360)
-        self.lifespan = random.randint(20, 40)
+        self.lifespan = random.uniform(0.5, 1.5)
         self.counter = 0
 
     def is_dead(self):
@@ -254,11 +282,12 @@ class Particle:
         rad = math.radians(self.angle)
         self.pos.x += math.cos(rad) * self.speed * dt
         self.pos.y += math.sin(rad) * self.speed * dt
-        self.counter += 1
-        self.radius -= self.radius / self.lifespan
+        self.counter += dt
+        self.radius -= (self.radius / self.lifespan) * dt
 
     def draw(self):
         pg.draw.circle(screen, (128,35,255), self.pos, self.radius)
+
 
 class Bullet:
     def __init__(self, x, y, angle):
@@ -266,7 +295,7 @@ class Bullet:
         self.speed = 800
         self.radius = 10
         self.angle = angle
-        self.lifespan = 200
+        self.lifespan = 1
         self.counter = 0
         self.collided = False
 
@@ -274,7 +303,7 @@ class Bullet:
         rad = math.radians(self.angle)
         self.pos.x += math.cos(rad) * self.speed * dt
         self.pos.y += math.sin(rad) * self.speed * dt
-        self.counter += 1
+        self.counter += dt
         # Collision with the map
         p1 = Circle(Vector(*self.pos), self.radius)
         if game.tilemap.poly_collide(p1):
@@ -292,14 +321,17 @@ class Bullet:
     def draw(self):
         pg.draw.circle(screen, (128,35,255), self.pos, self.radius)
 
+
 class Player:
     def __init__(self):
-        self.pos = pg.Vector2()
+        spawn_p = game.tilemap.spawners["player"][0]
+        self.pos = pg.Vector2(spawn_p[0], spawn_p[1])
         self.vel = pg.Vector2()
-        self.madx = 260
+        self.max_vel = 260
         self.friction = 0.8
         self.mode = "move"
 
+        self.aim_line_length = 400
         self.can_shoot = True
         self.shoot_counter = 0
         self.angle = 0
@@ -321,7 +353,7 @@ class Player:
         self.load_frames()
 
     def load_frames(self):
-        img = pg.image.load(rs_dir + self.img_path)
+        img = pg.image.load(rs_dir + self.img_path).convert_alpha()
         img_width, img_height = img.get_size()
         self.frames = []
         for frame_y in range(math.floor(img_height / self.frame_height)):
@@ -340,10 +372,10 @@ class Player:
             ))
             self.can_shoot = False
 
-    def update(self, dt):
+    def animate(self, dt):
         # Update animation frames
-        self.animation_counter += 1
-        if self.animation_counter > 5:
+        self.animation_counter += dt
+        if self.animation_counter > 1:
             max_frame = len(self.frame_sets[self.current_frame_set]["frames"])-1
             if self.current_frame_index < max_frame:
                 self.current_frame_index += 1
@@ -351,43 +383,17 @@ class Player:
                 self.current_frame_index = 0
             self.animation_counter = 0
 
-        # Update shoot counter
-        if not self.can_shoot:
-            self.shoot_counter += 1
-            if self.shoot_counter > 60:
-                self.can_shoot = True
-                self.shoot_counter = 0
+        # Change animation
+        if max(abs(self.vel.x), abs(self.vel.y)) > 1:
+            if self.current_frame_set != "move":
+                self.current_frame_index = 0
+                self.current_frame_set = "move"
+        else:
+            if self.current_frame_set != "idle":
+                self.current_frame_index = 0
+                self.current_frame_set = "idle"
 
-        # Set initial velocities on keypress
-        keys = pg.key.get_pressed()
-
-        if self.can_shoot:
-            if keys[pg.K_SPACE]:
-                self.mode = "aim"
-            elif self.mode == "aim": # If key is just released and the control mode hasn't changed
-                self.shoot()
-                self.mode = "move"
-
-        if self.mode == "move":
-            if keys[pg.K_LEFT]:
-                self.vel.x = -self.madx
-            elif keys[pg.K_RIGHT]:
-                self.vel.x = self.madx
-            if keys[pg.K_UP]:
-                self.vel.y = -self.madx
-            elif keys[pg.K_DOWN]:
-                self.vel.y = self.madx
-        elif self.mode == "aim":
-            if keys[pg.K_LEFT]:
-                self.angle -= 200 * dt
-            elif keys[pg.K_RIGHT]:
-                self.angle += 200 * dt
-            # Limit angle
-            if self.angle < 0:
-                self.angle = 360 + self.angle
-            if self.angle > 360:
-                self.angle = self.angle - 360
-
+    def move(self, dt):
         # Player collision and movement
         dx = self.vel.x * dt
         dy = self.vel.y * dt
@@ -419,15 +425,45 @@ class Player:
         if abs(self.vel.y) < 0.05:
             self.vel.y = 0
 
-        # Change animation
-        if max(abs(self.vel.x), abs(self.vel.y)) > 1:
-            if self.current_frame_set != "move":
-                self.current_frame_index = 0
-                self.current_frame_set = "move"
-        else:
-            if self.current_frame_set != "idle":
-                self.current_frame_index = 0
-                self.current_frame_set = "idle"
+    def update(self, dt):
+        # Update shoot counter
+        if not self.can_shoot:
+            self.shoot_counter += dt
+            if self.shoot_counter > 1:
+                self.can_shoot = True
+                self.shoot_counter = 0
+
+        # Set initial velocities on keypress
+        keys = pg.key.get_pressed()
+
+        if self.can_shoot:
+            if keys[pg.K_SPACE]:
+                self.mode = "aim"
+            elif self.mode == "aim": # If key is just released and the control mode hasn't changed
+                self.shoot()
+                self.mode = "move"
+
+        if self.mode == "move":
+            if keys[pg.K_LEFT]:
+                self.vel.x = -self.max_vel
+            elif keys[pg.K_RIGHT]:
+                self.vel.x = self.max_vel
+            if keys[pg.K_UP]:
+                self.vel.y = -self.max_vel
+            elif keys[pg.K_DOWN]:
+                self.vel.y = self.max_vel
+        elif self.mode == "aim":
+            if keys[pg.K_LEFT]:
+                self.angle -= 200 * dt
+            elif keys[pg.K_RIGHT]:
+                self.angle += 200 * dt
+            # Limit angle
+            if self.angle < 0:
+                self.angle = 360 + self.angle
+            if self.angle > 360:
+                self.angle = self.angle - 360
+
+        self.move(dt)
 
         camera.track((self.pos.x, self.pos.y, self.frame_width, self.frame_height))
 
@@ -436,7 +472,7 @@ class Player:
             # Draw aiming lines
             rad = math.radians(self.angle)
             start_pos = pg.Vector2(self.pos.x + self.frame_width/2, self.pos.y + self.frame_height/2)
-            end_pos = pg.Vector2(start_pos.x + math.cos(rad)*500, start_pos.y + math.sin(rad)*500)
+            end_pos = pg.Vector2(start_pos.x + math.cos(rad)*self.aim_line_length, start_pos.y + math.sin(rad)*self.aim_line_length)
             pg.draw.line(screen, (128,35,255), start_pos, end_pos, 2)
             pg.draw.circle(screen, (128,35,255), end_pos, 5)
 
@@ -444,8 +480,12 @@ class Player:
         img = self.frames[self.frame_sets[self.current_frame_set]["frames"][self.current_frame_index]]
         screen.blit(img, self.pos)
 
-class Game:
+
+class GameManager:
     def __init__(self):
+        self.prev_mode = MODE
+
+    def setup(self):
         self.splash_screen = SplashScreen()
         self.prev_mode = MODE
         self.tilemap = TiledMap()
@@ -475,8 +515,16 @@ class Game:
             self.player.draw()
             self.particle_manager.draw()
 
-game = Game()
+
+####################
+# Game Loop
+####################
+
+
+game = GameManager()
+game.setup()
 camera = Camera()
+
 
 while 1:
     for event in pg.event.get():
@@ -488,7 +536,11 @@ while 1:
             h = 480 if h < 480 else h
             window = pg.display.set_mode((w, h), pg.RESIZABLE)
     
-    dt = clock.tick(60) / 1000
+    dt = clock.tick(60)
+    # fps debug
+    print(round(1000/dt), "fps")
+    dt /= 1000
+
     window_size = window.get_rect().size
     screen_size = screen.get_rect().size
 

@@ -328,10 +328,11 @@ class Player:
         self.pos = pg.Vector2(spawn_p[0], spawn_p[1])
         self.vel = pg.Vector2()
         self.max_vel = 260
-        self.friction = 0.8
+        self.friction = 0.9
         self.mode = "move"
 
-        self.aim_line_length = 400
+        # Length from the center
+        self.aim_line_length = 50
         self.can_shoot = True
         self.shoot_counter = 0
         self.angle = 0
@@ -473,7 +474,7 @@ class Player:
             rad = math.radians(self.angle)
             start_pos = pg.Vector2(self.pos.x + self.frame_width/2, self.pos.y + self.frame_height/2)
             end_pos = pg.Vector2(start_pos.x + math.cos(rad)*self.aim_line_length, start_pos.y + math.sin(rad)*self.aim_line_length)
-            pg.draw.line(screen, (128,35,255), start_pos, end_pos, 2)
+            # pg.draw.line(screen, (128,35,255), start_pos, end_pos, 2)
             pg.draw.circle(screen, (128,35,255), end_pos, 5)
 
         # Draw self

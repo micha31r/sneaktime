@@ -274,7 +274,7 @@ class Particle:
         self.pos = pg.Vector2(x, y)
         self.speed = random.randint(200, 400)
         self.radius = random.randint(4, 8)
-        self.angle = random.randint(0, 360)
+        self.angle = math.radians(random.randint(0, 360))
         self.lifespan = random.uniform(0.5, 1.5)
         self.counter = 0
 
@@ -283,9 +283,8 @@ class Particle:
             return True
 
     def update(self, dt):
-        rad = math.radians(self.angle)
-        self.pos.x += math.cos(rad) * self.speed * dt
-        self.pos.y += math.sin(rad) * self.speed * dt
+        self.pos.x += math.cos(self.angle) * self.speed * dt
+        self.pos.y += math.sin(self.angle) * self.speed * dt
         self.counter += dt
         self.radius -= (self.radius / self.lifespan) * dt
 
@@ -306,9 +305,8 @@ class Bullet:
         self.collision_obj = Circle(Vector(*self.pos), self.radius)
 
     def update(self, dt):
-        rad = math.radians(self.angle)
-        self.pos.x += math.cos(rad) * self.speed * dt
-        self.pos.y += math.sin(rad) * self.speed * dt
+        self.pos.x += math.cos(self.angle) * self.speed * dt
+        self.pos.y += math.sin(self.angle) * self.speed * dt
         self.counter += dt
         
         # Collision with the map
@@ -368,9 +366,8 @@ class Player:
                 "player"
             ))
             # Set kickback velocity (opposite to the bullet's velocity)
-            rad = math.radians(self.angle)
-            self.vel.x -= math.cos(rad) * self.max_vel
-            self.vel.y -= math.sin(rad) * self.max_vel
+            self.vel.x -= math.cos(self.angle) * self.max_vel
+            self.vel.y -= math.sin(self.angle) * self.max_vel
             self.can_shoot = False
 
     def move(self, dt):
@@ -435,14 +432,14 @@ class Player:
                 self.vel.y = self.max_vel
         elif self.mode == "aim":
             if keys[pg.K_LEFT]:
-                self.angle -= 200 * dt
+                self.angle -= 5 * dt
             elif keys[pg.K_RIGHT]:
-                self.angle += 200 * dt
+                self.angle += 5 * dt
             # Limit angle
             if self.angle < 0:
-                self.angle = 360 + self.angle
-            if self.angle > 360:
-                self.angle = self.angle - 360
+                self.angle = math.radians(360) + self.angle
+            if self.angle > math.radians(360):
+                self.angle = self.angle - math.radians(360)
 
         self.move(dt)
         camera.track((self.pos.x, self.pos.y, self.img_w, self.img_h))
@@ -450,9 +447,8 @@ class Player:
     def draw(self):
         if self.mode == "aim":
             # Draw aiming lines
-            rad = math.radians(self.angle)
             start_pos = pg.Vector2(self.pos.x + self.img_w/2, self.pos.y + self.img_h/2)
-            end_pos = pg.Vector2(start_pos.x + math.cos(rad)*self.aim_line_length, start_pos.y + math.sin(rad)*self.aim_line_length)
+            end_pos = pg.Vector2(start_pos.x + math.cos(self.angle)*self.aim_line_length, start_pos.y + math.sin(self.angle)*self.aim_line_length)
             pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
 
         # Draw self
@@ -491,8 +487,6 @@ class Enemy:
         self.friction = 0.9
         self.mode = "move"
 
-        self.tracking_radius = 300
-
         # Length from the center
         self.aim_line_length = 50
         self.can_shoot = True
@@ -507,19 +501,19 @@ class Enemy:
         v = Vector
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
         self.collision_obj = Circle(v(*self.c_pos), self.img_w/2)
+        self.angular_vel = 0
         self.perspective_quad = [
             v(-self.img_w/2, 0),
             v(self.img_w/2, 0), 
-            v(self.img_w*2, self.img_h*4), 
-            v(-self.img_w*2, self.img_h*4), 
+            v(self.img_w*2, self.img_h*5), 
+            v(-self.img_w*2, self.img_h*5), 
         ]
-        self.perspective_obj = Poly(v(*self.c_pos), self.perspective_quad)
+        self.perspective_obj = Poly(v(*self.c_pos), self.perspective_quad, self.angle)
 
     def is_dead(self):
         pass
 
     def move(self, dt):
-        # Player collision and movement
         dx = self.vel.x * dt
         dy = self.vel.y * dt
 
@@ -541,9 +535,13 @@ class Enemy:
             self.vel.x = 0
             self.vel.y = 0
 
+        # Turn enemy
+        self.perspective_obj.angle += self.angular_vel * dt
+
         # Decrease velocity
         self.vel.x *= self.friction
         self.vel.y *= self.friction
+        self.angular_vel *= self.friction
 
         # Set velocity to 0 if too small
         if abs(self.vel.x) < 0.05:
@@ -553,8 +551,15 @@ class Enemy:
 
     def simulate_controls(self, dt):
         player = game.player
-        dv = player.pos - self.pos
-        if abs(dv.x) < self.tracking_radius and abs(dv.y) < self.tracking_radius:
+        dv = player.c_pos - self.c_pos
+        
+        if collide(game.player.collision_obj, self.perspective_obj) or (abs(dv.x) < self.img_w and abs(dv.y) < self.img_h):
+            # Set angular velocity
+            # https://stackoverflow.com/questions/42258637/how-to-know-the-angle-between-two-vectors
+            da = math.atan2(self.c_pos.y-player.c_pos.y, self.c_pos.x-player.c_pos.x) + math.radians(90) - self.perspective_obj.angle 
+            self.angular_vel += da
+
+            # Move the enemy
             self.vel = dv
             if self.vel.x > self.max_vel:
                 self.vel.x = self.max_vel
@@ -584,21 +589,17 @@ class Enemy:
 
         self.simulate_controls(dt)
         self.move(dt)
+        self.perspective_obj.pos = Vector(*self.c_pos)
 
     def draw(self):
         if self.mode == "aim":
             # Draw aiming lines
-            rad = math.radians(self.angle)
             start_pos = pg.Vector2(self.pos.x + self.img_w/2, self.pos.y + self.img_h/2)
-            end_pos = pg.Vector2(start_pos.x + math.cos(rad)*self.aim_line_length, start_pos.y + math.sin(rad)*self.aim_line_length)
+            end_pos = pg.Vector2(start_pos.x + math.cos(self.angle)*self.aim_line_length, start_pos.y + math.sin(self.angle)*self.aim_line_length)
             pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
 
-        # Calculate point co-ordinates
-        points = []
-        for p in self.perspective_quad:
-            points.append(p + self.c_pos)
         # Draw perspective area
-        pg.draw.polygon(game.enemy_manager.transparent_surface, (0, 0, 0, 32), points)
+        pg.draw.polygon(game.enemy_manager.transparent_surface, (0, 0, 0, 32), self.perspective_obj.points)
 
         # Draw self
         screen.blit(self.img, self.pos)

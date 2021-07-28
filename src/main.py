@@ -15,7 +15,7 @@ BASE_DIR = path.dirname(__file__)
 WINDOW_SIZE = W_WIDTH, W_HEIGHT = 640, 480
 WORLD_SIZE = (640*3, 480*3)
 MODE = "main"
-BG_COLOR = (200, 200, 200)
+BG_COLOR = (0, 0, 0)
 rs_dir = path.join(BASE_DIR, "resources")
 
 # Initialize pygame
@@ -462,6 +462,7 @@ class Player:
 class EnemyManager:
     def __init__(self):
         self.entities = []
+        self.transparent_surface = pg.Surface(WORLD_SIZE, pg.SRCALPHA)
 
     def add(self, e):
         self.entities.append(e)
@@ -473,6 +474,11 @@ class EnemyManager:
                 del self.entities[i]
 
     def draw(self):
+        # Draw transparent surface
+        screen.blit(self.transparent_surface, (0,0))
+        self.transparent_surface.fill((255,255,255,0))
+
+        # Draw enemies
         for e in self.entities:
             e.draw()
 
@@ -494,20 +500,20 @@ class Enemy:
         self.angle = 0
 
         # Sprites & Animation
-        self.img_path = "/characters/player.png"
+        self.img_path = "/characters/enemy.png"
         self.img = pg.image.load(rs_dir + self.img_path).convert_alpha()
         self.img_w, self.img_h = 64, 64
 
         v = Vector
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
-        self.collision_obj = Circle(Vector(*self.c_pos), self.img_w/2)
-
-        # self.perspective_obj = Poly(center(*self.pos, self.img_w, self.img_h, False), [
-        #     v(0, self.img_h/2), 
-        #     v(self.img_w, self.img_h/2), 
-        #     v(self.img_w*2, self.img_h*2), 
-        #     v(0, self.img_h*2), 
-        # ])
+        self.collision_obj = Circle(v(*self.c_pos), self.img_w/2)
+        self.perspective_quad = [
+            v(-self.img_w/2, 0),
+            v(self.img_w/2, 0), 
+            v(self.img_w*2, self.img_h*4), 
+            v(-self.img_w*2, self.img_h*4), 
+        ]
+        self.perspective_obj = Poly(v(*self.c_pos), self.perspective_quad)
 
     def is_dead(self):
         pass
@@ -586,6 +592,13 @@ class Enemy:
             start_pos = pg.Vector2(self.pos.x + self.img_w/2, self.pos.y + self.img_h/2)
             end_pos = pg.Vector2(start_pos.x + math.cos(rad)*self.aim_line_length, start_pos.y + math.sin(rad)*self.aim_line_length)
             pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
+
+        # Calculate point co-ordinates
+        points = []
+        for p in self.perspective_quad:
+            points.append(p + self.c_pos)
+        # Draw perspective area
+        pg.draw.polygon(game.enemy_manager.transparent_surface, (0, 0, 0, 32), points)
 
         # Draw self
         screen.blit(self.img, self.pos)

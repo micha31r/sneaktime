@@ -15,7 +15,7 @@ BASE_DIR = path.dirname(__file__)
 W_SIZE = W_WIDTH, W_HEIGHT = 640, 480
 WORLD_SIZE = (640*3, 480*3)
 MODE = "main"
-BG_COLOR = (200,200,200)
+BG_COLOR = (200, 200, 200)
 rs_dir = path.join(BASE_DIR, "resources")
 
 # Initialize pygame
@@ -49,7 +49,7 @@ def c_pos(x, y, w, h, default=True):
 class Camera:
     def __init__(self):
         self.pos = pg.Vector2()
-        self.scale = pg.Vector2(1,1)
+        self.scale = pg.Vector2(1, 1)
         self.vel = pg.Vector2()
         self.margin = 200
         self.max_vel = 400
@@ -102,7 +102,7 @@ class Camera:
 
 class SplashScreen:
     def __init__(self):
-        self.text = font.render('Demo', True, (0,0,0))
+        self.text = font.render('Demo', True, (0, 0, 0))
         self.rect = self.text.get_rect()
         self.opacity = 0
         self.timer = 0
@@ -127,8 +127,8 @@ class SplashScreen:
 class TiledMap:
     def __init__(self):
         self.spawner_tiles = {
-            "player": 41,
-            "enemy": 52,
+            "player": 41, 
+            "enemy": 52, 
         }
 
         self.load_tilemap()
@@ -164,7 +164,7 @@ class TiledMap:
                         points = []
                         for p in obj["polygon"]:
                             points.append(v(p["x"], p["y"]))
-                        polys.append(Poly(v(obj["x"],obj["y"]), points))
+                        polys.append(Poly(v(obj["x"], obj["y"]), points))
                 if polys:
                     self.polygons[layer["name"]] = polys
 
@@ -191,7 +191,7 @@ class TiledMap:
                             rect = (render_x, render_y, tilewidth, tileheight)
                             if layer["visible"]:
                                 self.tiles.append({
-                                    "img": self.tileset[tile_id-1],
+                                    "img": self.tileset[tile_id-1], 
                                     "rect": rect
                                 })
                             else:
@@ -228,7 +228,7 @@ class TiledMap:
                             return True
 
     def poly_collide(self, p1, target_layer_name=None, capture_all=False):
-        # Must capture all collisions for r.overlap_v to work,
+        # Must capture all collisions for r.overlap_v to work, 
         # otherwise 'a' will tunnel into 'b' while responding collision with 'c'
         all_collisions = []
         for layer_name, items in self.polygons.items():
@@ -277,9 +277,9 @@ class ParticleManager:
 
 class Particle:
     def __init__(self, x, y):
-        self.pos = pg.Vector2(x,y)
-        self.speed = random.randint(200,400)
-        self.radius = random.randint(4,8)
+        self.pos = pg.Vector2(x, y)
+        self.speed = random.randint(200, 400)
+        self.radius = random.randint(4, 8)
         self.angle = random.randint(0, 360)
         self.lifespan = random.uniform(0.5, 1.5)
         self.counter = 0
@@ -296,12 +296,12 @@ class Particle:
         self.radius -= (self.radius / self.lifespan) * dt
 
     def draw(self):
-        pg.draw.circle(screen, (128,35,255), self.pos, self.radius)
+        pg.draw.circle(screen, (128, 35, 255), self.pos, self.radius)
 
 
 class Bullet:
     def __init__(self, x, y, angle, flag):
-        self.pos = pg.Vector2(x,y)
+        self.pos = pg.Vector2(x, y)
         self.speed = 800
         self.radius = 10
         self.angle = angle
@@ -330,7 +330,7 @@ class Bullet:
                 del game.enemy_manager.entities[i] # Delete entity
 
     def create_particles(self):
-        for i in range(random.randint(5,10)):
+        for i in range(random.randint(5, 10)):
             game.particle_manager.add(Particle(*self.pos))
 
     def is_dead(self):
@@ -339,7 +339,7 @@ class Bullet:
             return True
 
     def draw(self):
-        pg.draw.circle(screen, (128,35,255), self.pos, self.radius)
+        pg.draw.circle(screen, (128, 35, 255), self.pos, self.radius)
 
 
 class Player:
@@ -363,10 +363,10 @@ class Player:
         self.frame_sets = {
             "idle": {
                 "frames": [0]
-            },
+            }, 
             "move": {
                 "frames": [0]
-            },
+            }, 
         }
         self.current_frame_set = "idle"
         self.current_frame_index = 0
@@ -389,9 +389,9 @@ class Player:
     def shoot(self):
         if self.can_shoot:
             game.particle_manager.add(Bullet(
-                self.pos.x + self.frame_w/2,
-                self.pos.y + self.frame_h/2,
-                self.angle,
+                self.pos.x + self.frame_w/2, 
+                self.pos.y + self.frame_h/2, 
+                self.angle, 
                 "player"
             ))
             # Set kickback velocity (opposite to the bullet's velocity)
@@ -504,7 +504,7 @@ class Player:
             rad = math.radians(self.angle)
             start_pos = pg.Vector2(self.pos.x + self.frame_w/2, self.pos.y + self.frame_h/2)
             end_pos = pg.Vector2(start_pos.x + math.cos(rad)*self.aim_line_length, start_pos.y + math.sin(rad)*self.aim_line_length)
-            pg.draw.circle(screen, (128,35,255), end_pos, 5)
+            pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
 
         # Draw self
         img = self.frames[self.frame_sets[self.current_frame_set]["frames"][self.current_frame_index]]
@@ -531,7 +531,7 @@ class EnemyManager:
 
 class Enemy:
     def __init__(self, x, y):
-        self.pos = pg.Vector2(x,y)
+        self.pos = pg.Vector2(x, y)
         self.vel = pg.Vector2()
         self.max_vel = random.randint(200, 300)
         self.friction = 0.9
@@ -551,17 +551,24 @@ class Enemy:
         self.frame_sets = {
             "idle": {
                 "frames": [0]
-            },
+            }, 
             "move": {
                 "frames": [0]
-            },
+            }, 
         }
         self.current_frame_set = "idle"
         self.current_frame_index = 0
         self.animation_counter = 0
         self.load_frames()
 
-        self.collision_obj = Circle(Vector(*self.pos), 32)
+        v = Vector
+        self.collision_obj = Circle(v(*self.pos), 32)
+        self.perspective_obj = Poly(c_pos(*self.pos, self.frame_w, self.frame_h, False), [
+            v(0, self.frame_h/2), 
+            v(self.frame_w, self.frame_h/2), 
+            v(self.frame_w*2, self.frame_h*2), 
+            v(0, self.frame_h*2), 
+        ])
 
     def load_frames(self):
         img = pg.image.load(rs_dir + self.img_path).convert_alpha()
@@ -580,8 +587,8 @@ class Enemy:
     def shoot(self):
         if self.can_shoot:
             game.particle_manager.add(Bullet(
-                self.pos.x + self.frame_w/2,
-                self.pos.y + self.frame_h/2,
+                self.pos.x + self.frame_w/2, 
+                self.pos.y + self.frame_h/2, 
                 self.angle
             ))
             self.can_shoot = False
@@ -661,7 +668,7 @@ class Enemy:
             rad = math.radians(self.angle)
             start_pos = pg.Vector2(self.pos.x + self.frame_w/2, self.pos.y + self.frame_h/2)
             end_pos = pg.Vector2(start_pos.x + math.cos(rad)*self.aim_line_length, start_pos.y + math.sin(rad)*self.aim_line_length)
-            pg.draw.circle(screen, (128,35,255), end_pos, 5)
+            pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
 
         # Draw self
         img = self.frames[self.frame_sets[self.current_frame_set]["frames"][self.current_frame_index]]
@@ -748,8 +755,8 @@ while 1:
     # Render main surface after scaling it by the scale factor
     window.fill(BG_COLOR)
     window.blit(
-        pg.transform.scale(screen, (int(screen_size[0]*camera.scale.x), int(screen_size[1]*camera.scale.x))),
-        (0,0),
+        pg.transform.scale(screen, (int(screen_size[0]*camera.scale.x), int(screen_size[1]*camera.scale.x))), 
+        (0, 0), 
         (camera.pos.x*camera.scale.x, camera.pos.y*camera.scale.x, window.get_width(), window.get_height())
     )
     pg.display.flip()

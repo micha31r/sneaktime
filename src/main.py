@@ -12,7 +12,7 @@ from collision import *
 BASE_DIR = path.dirname(__file__)
 
 # Settings
-W_SIZE = W_WIDTH, W_HEIGHT = 640, 480
+WINDOW_SIZE = W_WIDTH, W_HEIGHT = 640, 480
 WORLD_SIZE = (640*3, 480*3)
 MODE = "main"
 BG_COLOR = (200, 200, 200)
@@ -21,7 +21,7 @@ rs_dir = path.join(BASE_DIR, "resources")
 # Initialize pygame
 pg.init()
 pg.display.set_caption("Infiltrate")
-window = pg.display.set_mode(W_SIZE, pg.RESIZABLE)
+window = pg.display.set_mode(WINDOW_SIZE, pg.RESIZABLE)
 screen = pg.Surface(WORLD_SIZE)
 clock = pg.time.Clock()
 font = pg.font.Font(rs_dir + "/m6x11.ttf", 64)
@@ -32,10 +32,7 @@ font = pg.font.Font(rs_dir + "/m6x11.ttf", 64)
 ####################
 
 
-def center(w1, h1, w2, h2):
-    return pg.Vector2((w2-w1)/2, (h2-h1)/2)
-
-def c_pos(x, y, w, h, default=True):
+def center(x, y, w, h, default=True):
     if not default:
         return Vector(x+w/2, y+h/2)
     return pg.Vector2(x+w/2, y+h/2)
@@ -121,7 +118,7 @@ class SplashScreen:
             MODE = "main"
 
     def draw(self):
-        screen.blit(self.text, center(*self.rect[2:4], *W_SIZE))
+        screen.blit(self.text, (0,0))
 
 
 class TiledMap:
@@ -245,9 +242,6 @@ class TiledMap:
                             return r.overlap_v
         return all_collisions
 
-    def update(self):
-        pass
-
     def draw(self):
         for t in self.tiles:
             rect = t["rect"]
@@ -359,38 +353,17 @@ class Player:
 
         # Sprites & Animation
         self.img_path = "/characters/player.png"
-        self.frame_w, self.frame_h = 64, 64
-        self.frame_sets = {
-            "idle": {
-                "frames": [0]
-            }, 
-            "move": {
-                "frames": [0]
-            }, 
-        }
-        self.current_frame_set = "idle"
-        self.current_frame_index = 0
-        self.animation_counter = 0
-        self.load_frames()
+        self.img = pg.image.load(rs_dir + self.img_path).convert_alpha()
+        self.img_w, self.img_h = 64, 64
 
-        self.collision_obj = Circle(Vector(*self.pos), 32)
-
-    def load_frames(self):
-        img = pg.image.load(rs_dir + self.img_path).convert_alpha()
-        img_width, img_height = img.get_size()
-        self.frames = []
-        for frame_y in range(math.floor(img_height / self.frame_h)):
-            img_y = frame_y * self.frame_h
-            for frame_x in range(math.floor(img_width / self.frame_w)):
-                img_x = frame_x * self.frame_w
-                rect = (img_x, img_y, self.frame_w, self.frame_h)
-                self.frames.append(img.subsurface(rect))
+        self.c_pos = center(*self.pos, self.img_w, self.img_h)
+        self.collision_obj = Circle(Vector(*self.c_pos), self.img_w/2)
 
     def shoot(self):
         if self.can_shoot:
             game.particle_manager.add(Bullet(
-                self.pos.x + self.frame_w/2, 
-                self.pos.y + self.frame_h/2, 
+                self.pos.x + self.img_w/2, 
+                self.pos.y + self.img_h/2, 
                 self.angle, 
                 "player"
             ))
@@ -400,27 +373,6 @@ class Player:
             self.vel.y -= math.sin(rad) * self.max_vel
             self.can_shoot = False
 
-    def animate(self, dt):
-        # Update animation frames
-        self.animation_counter += dt
-        if self.animation_counter > 1:
-            max_frame = len(self.frame_sets[self.current_frame_set]["frames"])-1
-            if self.current_frame_index < max_frame:
-                self.current_frame_index += 1
-            else:
-                self.current_frame_index = 0
-            self.animation_counter = 0
-
-        # Change animation
-        if max(abs(self.vel.x), abs(self.vel.y)) > 1:
-            if self.current_frame_set != "move":
-                self.current_frame_index = 0
-                self.current_frame_set = "move"
-        else:
-            if self.current_frame_set != "idle":
-                self.current_frame_index = 0
-                self.current_frame_set = "idle"
-
     def move(self, dt):
         # Player collision and movement
         dx = self.vel.x * dt
@@ -429,19 +381,17 @@ class Player:
         self.pos.x += dx
         self.pos.y += dy
 
-        # Create collision object
-        x1 = self.pos.x + self.frame_w / 2
-        y1 = self.pos.y + self.frame_h / 2
-        self.collision_obj.pos.x = x1
-        self.collision_obj.pos.y = y1
+        # Update collision object
+        self.c_pos = center(*self.pos, self.img_w, self.img_h)
+        self.collision_obj.pos = Vector(*self.c_pos)
 
         all_collisions = game.tilemap.poly_collide(self.collision_obj, capture_all=True)
         if all_collisions:
             for c in all_collisions:
                 self.pos.x -= c.x
                 self.pos.y -= c.y
-                self.collision_obj.pos.x -= c.x
-                self.collision_obj.pos.y -= c.y
+                self.c_pos = center(*self.pos, self.img_w, self.img_h)
+                self.collision_obj.pos = Vector(*self.c_pos)
                 # pass
             self.vel.x = 0
             self.vel.y = 0
@@ -495,20 +445,18 @@ class Player:
                 self.angle = self.angle - 360
 
         self.move(dt)
-
-        camera.track((self.pos.x, self.pos.y, self.frame_w, self.frame_h))
+        camera.track((self.pos.x, self.pos.y, self.img_w, self.img_h))
 
     def draw(self):
         if self.mode == "aim":
             # Draw aiming lines
             rad = math.radians(self.angle)
-            start_pos = pg.Vector2(self.pos.x + self.frame_w/2, self.pos.y + self.frame_h/2)
+            start_pos = pg.Vector2(self.pos.x + self.img_w/2, self.pos.y + self.img_h/2)
             end_pos = pg.Vector2(start_pos.x + math.cos(rad)*self.aim_line_length, start_pos.y + math.sin(rad)*self.aim_line_length)
             pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
 
         # Draw self
-        img = self.frames[self.frame_sets[self.current_frame_set]["frames"][self.current_frame_index]]
-        screen.blit(img, self.pos)
+        screen.blit(self.img, self.pos)
 
 
 class EnemyManager:
@@ -546,52 +494,23 @@ class Enemy:
         self.angle = 0
 
         # Sprites & Animation
-        self.img_path = "/characters/enemy.png"
-        self.frame_w, self.frame_h = 64, 64
-        self.frame_sets = {
-            "idle": {
-                "frames": [0]
-            }, 
-            "move": {
-                "frames": [0]
-            }, 
-        }
-        self.current_frame_set = "idle"
-        self.current_frame_index = 0
-        self.animation_counter = 0
-        self.load_frames()
+        self.img_path = "/characters/player.png"
+        self.img = pg.image.load(rs_dir + self.img_path).convert_alpha()
+        self.img_w, self.img_h = 64, 64
 
         v = Vector
-        self.collision_obj = Circle(v(*self.pos), 32)
-        self.perspective_obj = Poly(c_pos(*self.pos, self.frame_w, self.frame_h, False), [
-            v(0, self.frame_h/2), 
-            v(self.frame_w, self.frame_h/2), 
-            v(self.frame_w*2, self.frame_h*2), 
-            v(0, self.frame_h*2), 
-        ])
+        self.c_pos = center(*self.pos, self.img_w, self.img_h)
+        self.collision_obj = Circle(Vector(*self.c_pos), self.img_w/2)
 
-    def load_frames(self):
-        img = pg.image.load(rs_dir + self.img_path).convert_alpha()
-        img_width, img_height = img.get_size()
-        self.frames = []
-        for frame_y in range(math.floor(img_height / self.frame_h)):
-            img_y = frame_y * self.frame_h
-            for frame_x in range(math.floor(img_width / self.frame_w)):
-                img_x = frame_x * self.frame_w
-                rect = (img_x, img_y, self.frame_w, self.frame_h)
-                self.frames.append(img.subsurface(rect))
+        # self.perspective_obj = Poly(center(*self.pos, self.img_w, self.img_h, False), [
+        #     v(0, self.img_h/2), 
+        #     v(self.img_w, self.img_h/2), 
+        #     v(self.img_w*2, self.img_h*2), 
+        #     v(0, self.img_h*2), 
+        # ])
 
     def is_dead(self):
         pass
-
-    def shoot(self):
-        if self.can_shoot:
-            game.particle_manager.add(Bullet(
-                self.pos.x + self.frame_w/2, 
-                self.pos.y + self.frame_h/2, 
-                self.angle
-            ))
-            self.can_shoot = False
 
     def move(self, dt):
         # Player collision and movement
@@ -601,19 +520,17 @@ class Enemy:
         self.pos.x += dx
         self.pos.y += dy
 
-        # Create collision object
-        x1 = self.pos.x + self.frame_w / 2
-        y1 = self.pos.y + self.frame_h / 2
-        self.collision_obj.pos.x = x1
-        self.collision_obj.pos.y = y1
+        # Update collision object
+        self.c_pos = center(*self.pos, self.img_w, self.img_h)
+        self.collision_obj.pos = Vector(*self.c_pos)
 
         all_collisions = self.peer_collide() + game.tilemap.poly_collide( self.collision_obj, capture_all=True)
         if all_collisions:
             for c in all_collisions:
                 self.pos.x -= c.x
                 self.pos.y -= c.y
-                self.collision_obj.pos.x -= c.x
-                self.collision_obj.pos.y -= c.y
+                self.c_pos = center(*self.pos, self.img_w, self.img_h)
+                self.collision_obj.pos = Vector(*self.c_pos)
                 # pass
             self.vel.x = 0
             self.vel.y = 0
@@ -666,13 +583,12 @@ class Enemy:
         if self.mode == "aim":
             # Draw aiming lines
             rad = math.radians(self.angle)
-            start_pos = pg.Vector2(self.pos.x + self.frame_w/2, self.pos.y + self.frame_h/2)
+            start_pos = pg.Vector2(self.pos.x + self.img_w/2, self.pos.y + self.img_h/2)
             end_pos = pg.Vector2(start_pos.x + math.cos(rad)*self.aim_line_length, start_pos.y + math.sin(rad)*self.aim_line_length)
             pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
 
         # Draw self
-        img = self.frames[self.frame_sets[self.current_frame_set]["frames"][self.current_frame_index]]
-        screen.blit(img, self.pos)
+        screen.blit(self.img, self.pos)
 
 
 class GameManager:

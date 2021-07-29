@@ -556,7 +556,11 @@ class Enemy:
         if collide(game.player.collision_obj, self.perspective_obj) or (abs(dv.x) < self.img_w and abs(dv.y) < self.img_h):
             # Set angular velocity
             # https://stackoverflow.com/questions/42258637/how-to-know-the-angle-between-two-vectors
-            da = math.atan2(self.c_pos.y-player.c_pos.y, self.c_pos.x-player.c_pos.x) + math.radians(90) - self.perspective_obj.angle 
+            angle = math.atan2(self.c_pos.y-player.c_pos.y, self.c_pos.x-player.c_pos.x) + math.radians(90)
+            diff = angle - self.perspective_obj.angle
+            # Find the difference between two angles with sign
+            # https://stackoverflow.com/questions/1878907/how-can-i-find-the-difference-between-two-angles
+            da = math.atan2(math.sin(diff), math.cos(diff))
             self.angular_vel += da
 
             # Move the enemy

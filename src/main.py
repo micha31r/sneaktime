@@ -502,13 +502,13 @@ class Enemy:
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
         self.collision_obj = Circle(v(*self.c_pos), self.img_w/2)
         self.angular_vel = 0
-        self.perspective_quad = [
+        self.FOV_quad = [
             v(-self.img_w/2, 0),
             v(self.img_w/2, 0), 
             v(self.img_w*2, self.img_h*5), 
             v(-self.img_w*2, self.img_h*5), 
         ]
-        self.perspective_obj = Poly(v(*self.c_pos), self.perspective_quad, self.angle)
+        self.FOV_obj = Poly(v(*self.c_pos), self.FOV_quad, self.angle)
 
     def is_dead(self):
         pass
@@ -536,7 +536,7 @@ class Enemy:
             self.vel.y = 0
 
         # Turn enemy
-        self.perspective_obj.angle += self.angular_vel * dt
+        self.FOV_obj.angle += self.angular_vel * dt
 
         # Decrease velocity
         self.vel.x *= self.friction
@@ -553,11 +553,11 @@ class Enemy:
         player = game.player
         dv = player.c_pos - self.c_pos
         
-        if collide(game.player.collision_obj, self.perspective_obj) or (abs(dv.x) < self.img_w and abs(dv.y) < self.img_h):
+        if collide(game.player.collision_obj, self.FOV_obj) or (abs(dv.x) < self.img_w and abs(dv.y) < self.img_h):
             # Set angular velocity
             # https://stackoverflow.com/questions/42258637/how-to-know-the-angle-between-two-vectors
             angle = math.atan2(self.c_pos.y-player.c_pos.y, self.c_pos.x-player.c_pos.x) + math.radians(90)
-            diff = angle - self.perspective_obj.angle
+            diff = angle - self.FOV_obj.angle
             # Find the difference between two angles with sign
             # https://stackoverflow.com/questions/1878907/how-can-i-find-the-difference-between-two-angles
             da = math.atan2(math.sin(diff), math.cos(diff))
@@ -593,7 +593,7 @@ class Enemy:
 
         self.simulate_controls(dt)
         self.move(dt)
-        self.perspective_obj.pos = Vector(*self.c_pos)
+        self.FOV_obj.pos = Vector(*self.c_pos)
 
     def draw(self):
         if self.mode == "aim":
@@ -602,8 +602,8 @@ class Enemy:
             end_pos = pg.Vector2(start_pos.x + math.cos(self.angle)*self.aim_line_length, start_pos.y + math.sin(self.angle)*self.aim_line_length)
             pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
 
-        # Draw perspective area
-        pg.draw.polygon(game.enemy_manager.transparent_surface, (0, 0, 0, 32), self.perspective_obj.points)
+        # Draw FOV area
+        pg.draw.polygon(game.enemy_manager.transparent_surface, (0, 0, 0, 32), self.FOV_obj.points)
 
         # Draw self
         screen.blit(self.img, self.pos)

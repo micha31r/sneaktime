@@ -83,8 +83,17 @@ class Camera:
         self.height = window_size[1] / self.scale.x
 
         # Move camera
-        self.pos.x += self.vel.x * dt
-        self.pos.y += self.vel.y * dt
+        self.pos += self.vel * dt
+
+        # Limit position
+        if self.pos.x < 0:
+            self.pos.x = 0
+        elif self.pos.x + window_size[0] > WORLD_SIZE[0]:
+            self.pos.x = WORLD_SIZE[0] - window_size[0]
+        if self.pos.y < 0:
+            self.pos.y = 0
+        elif self.pos.y + window_size[1] > WORLD_SIZE[1]:
+            self.pos.y = WORLD_SIZE[1] - window_size[1]
 
         # Decrease velocity
         self.vel.x *= self.friction
@@ -122,19 +131,19 @@ class SplashScreen:
 
 
 class TiledMap:
-    def __init__(self):
+    def __init__(self, path):
         self.spawner_tiles = {
             "player": 41, 
             "enemy": 52, 
         }
 
-        self.load_tilemap()
+        self.load_tilemap(path)
         self.load_tileset()
         self.load_polygons()
         self.load_tiles()
 
-    def load_tilemap(self):
-        f = open(rs_dir + "/tilemap.json")
+    def load_tilemap(self, path):
+        f = open(rs_dir + path)
         self.data = json.load(f)
 
     def load_tileset(self):
@@ -318,7 +327,7 @@ class Bullet:
         # Collision with the map
         self.collision_obj.pos.x = self.pos.x
         self.collision_obj.pos.y = self.pos.y
-        if game.tilemap.poly_collide(self.collision_obj):
+        if game.level_manager.current_map().poly_collide(self.collision_obj):
             self.collided = True
 
         # Collision with enemies
@@ -342,7 +351,7 @@ class Bullet:
 
 class Player:
     def __init__(self):
-        spawn_p = game.tilemap.spawners["player"][0]
+        spawn_p = game.level_manager.current_map().spawners["player"][0]
         self.pos = pg.Vector2(spawn_p[0], spawn_p[1])
         self.vel = pg.Vector2()
         self.max_vel = 260
@@ -383,7 +392,7 @@ class Player:
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
         self.collision_obj.pos = Vector(*self.c_pos)
 
-        all_collisions = game.tilemap.poly_collide(self.collision_obj, capture_all=True)
+        all_collisions = game.level_manager.current_map().poly_collide(self.collision_obj, capture_all=True)
         if all_collisions:
             for c in all_collisions:
                 self.pos.x -= c.x
@@ -527,7 +536,7 @@ class Enemy:
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
         self.collision_obj.pos = Vector(*self.c_pos)
 
-        all_collisions = self.peer_collide() + game.tilemap.poly_collide( self.collision_obj, capture_all=True)
+        all_collisions = self.peer_collide() + game.level_manager.current_map().poly_collide( self.collision_obj, capture_all=True)
         if all_collisions:
             for c in all_collisions:
                 self.pos.x -= c.x
@@ -565,6 +574,9 @@ class Enemy:
         dv = player.c_pos - self.c_pos
         
         if collide(game.player.collision_obj, self.FOV_obj) or (abs(dv.x) < self.img_w and abs(dv.y) < self.img_h):
+            # Initiate lockdown
+            game.level_manager.lockdown = True
+
             # Set angular velocity
             # https://stackoverflow.com/questions/42258637/how-to-know-the-angle-between-two-vectors
             angle = math.atan2(self.c_pos.y-player.c_pos.y, self.c_pos.x-player.c_pos.x)
@@ -592,7 +604,7 @@ class Enemy:
                 v(-Bullet.radius, l_diff),
             ]
             LOS_poly = Poly(v(*self.c_pos), LOS_poly_points, rotated_angle)
-            collision = game.tilemap.poly_collide(LOS_poly)
+            collision = game.level_manager.current_map().poly_collide(LOS_poly)
             # Shoot if there's not obstables in the way
             if not collision:
                 self.shoot()
@@ -651,22 +663,63 @@ class Enemy:
         screen.blit(self.img, self.pos)
 
 
+class LevelManager:
+    def __init__(self, n=0):
+        self.lockdown = False
+        self.lockdown_timer = math.pi * 10 # 31.415 seconds
+        self.current_level = n
+        self.levels = [TiledMap("/tilemap.json")]
+        self.transparent_surface = pg.Surface(WORLD_SIZE, pg.SRCALPHA)
+
+    def current_map(self):
+        return self.levels[self.current_level]
+
+    def switch(self, n):
+        self.current_level = n
+        self.load_level(n)
+
+    def load_level(self, n):
+        # Spawn enemies
+        spawn_p = self.current_map().spawners["enemy"]
+        for p in spawn_p:
+            game.enemy_manager.add(Enemy(p[0], p[1]))
+
+    def update(self, dt):
+        if self.lockdown:
+            self.lockdown_timer -= dt
+            if self.lockdown_timer < 0:
+                # Code here to show restart menu
+                self.lockdown = False
+                self.lockdown_timer = 0
+
+    def draw_lockdown_filter(self):
+        # Draw transparent red filter
+        if self.lockdown:
+            # Opacity ust be between 0 - 255
+            # The minimum opacity is 50. Since(sin + 1) * 50 produces a max value of 100, the maximum opacity is 150
+            opacity = 50 + (math.sin(self.lockdown_timer) + 1) * 50
+            screen.blit(self.transparent_surface, (0,0))
+            self.transparent_surface.fill((255,255,255,0))
+            size = window.get_rect().size
+            pg.draw.rect(self.transparent_surface, (252, 3, 69, opacity), (camera.pos.x-20, camera.pos.y-20, size[0]+40, size[1]+40))
+
+    def draw(self):
+        self.current_map().draw()
+
+
 class GameManager:
     def __init__(self):
         self.prev_mode = MODE
 
     def setup(self):
         self.splash_screen = SplashScreen()
-        self.prev_mode = MODE
-        self.tilemap = TiledMap()
+        self.level_manager = LevelManager()
         self.player = Player()
-        self.particle_manager = ParticleManager()
         self.enemy_manager = EnemyManager()
+        self.particle_manager = ParticleManager()
 
-        # Temporary code to spawn enemies
-        spawn_p = game.tilemap.spawners["enemy"]
-        for p in spawn_p:
-            self.enemy_manager.add(Enemy(p[0], p[1]))
+        # Load level
+        self.level_manager.load_level(0)
 
     def update(self, dt):
         mode_changed = False
@@ -677,21 +730,23 @@ class GameManager:
         if MODE == "menu":
             pass
         if MODE == "main":
-            if mode_changed:
-                self.player = Player()
+            self.level_manager.update(dt)
             self.player.update(dt)
-            self.particle_manager.update(dt)
             self.enemy_manager.update(dt)
+            self.particle_manager.update(dt)
         self.prev_mode = MODE
 
     def draw(self):
         if MODE == "splash":
             self.splash_screen.draw()
         if MODE == "main":
-            self.tilemap.draw()
+            self.level_manager.draw()
             self.player.draw()
-            self.particle_manager.draw()
             self.enemy_manager.draw()
+            self.particle_manager.draw()
+
+            # Top layers
+            self.level_manager.draw_lockdown_filter()
 
 
 ####################

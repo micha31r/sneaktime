@@ -690,7 +690,7 @@ class LevelManager:
             if self.lockdown_timer < 0:
                 # Code here to show restart menu
                 self.lockdown = False
-                self.lockdown_timer = 0
+                self.lockdown_timer = math.pi * 10
 
     def draw_lockdown_filter(self):
         # Draw transparent red filter

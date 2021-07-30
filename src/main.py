@@ -696,8 +696,8 @@ class LevelManager:
         # Draw transparent red filter
         if self.lockdown:
             # Opacity ust be between 0 - 255
-            # The minimum opacity is 50. Since(sin + 1) * 50 produces a max value of 100, the maximum opacity is 150
-            opacity = 50 + (math.sin(self.lockdown_timer) + 1) * 50
+            # The minimum opacity is 50. Since(sin + 1) * 50 produces a max value of 60, the maximum opacity is 110
+            opacity = 50 + (math.sin(self.lockdown_timer * 4) + 1) * 30
             screen.blit(self.transparent_surface, (0,0))
             self.transparent_surface.fill((255,255,255,0))
             size = window.get_rect().size

@@ -466,6 +466,7 @@ class Player:
 
 class EnemyManager:
     def __init__(self):
+        self.detect_outside_FOV = False
         self.entities = []
         self.transparent_surface = pg.Surface(WORLD_SIZE, pg.SRCALPHA)
 
@@ -474,7 +475,7 @@ class EnemyManager:
 
     def update(self, dt):
         for i, e in reversed(list(enumerate(self.entities))):
-            e.update(dt)
+            e.update(dt, self.detect_outside_FOV)
             if e.is_dead() == True:
                 del self.entities[i]
 
@@ -521,6 +522,8 @@ class Enemy:
         self.FOV_obj = Poly(v(*self.c_pos), self.FOV_points, self.angle)
         # How long between each random turn in idle mode
         self.turn_delay_timer = random.uniform(0.5,2)
+
+        self.trigger_lockdown_timer = 5
 
     def is_dead(self):
         pass
@@ -569,13 +572,17 @@ class Enemy:
             self.vel.y -= math.sin(self.angle) * self.max_vel
             self.can_shoot = False
 
-    def simulate_controls(self, dt):
+    def simulate_controls(self, dt, detect_outside_FOV):
         player = game.player
         dv = player.c_pos - self.c_pos
         
-        if collide(game.player.collision_obj, self.FOV_obj) or (abs(dv.x) < self.img_w and abs(dv.y) < self.img_h):
-            # Initiate lockdown
-            game.level_manager.lockdown = True
+        if detect_outside_FOV or (collide(game.player.collision_obj, self.FOV_obj) or (abs(dv.x) < self.img_w and abs(dv.y) < self.img_h)):
+            if not game.level_manager.lockdown:
+                # Initiate lockdown after a few seconds delay
+                self.trigger_lockdown_timer -= dt
+                if self.trigger_lockdown_timer < 0:
+                    game.level_manager.lockdown = True
+                    self.trigger_lockdown_timer = 5
 
             # Set angular velocity
             # https://stackoverflow.com/questions/42258637/how-to-know-the-angle-between-two-vectors
@@ -645,8 +652,8 @@ class Enemy:
                     all_collisions.append(r.overlap_v)
         return all_collisions
 
-    def update(self, dt):
-        self.simulate_controls(dt)
+    def update(self, dt, detect_outside_FOV):
+        self.simulate_controls(dt, detect_outside_FOV)
         self.move(dt)
         self.FOV_obj.pos = Vector(*self.c_pos)
 
@@ -687,6 +694,7 @@ class LevelManager:
 
     def update(self, dt):
         if self.lockdown:
+            game.enemy_manager.detect_outside_FOV = True
             self.lockdown_timer -= dt
             self.lockdown_opacity_counter += dt
             if self.lockdown_timer < 0:

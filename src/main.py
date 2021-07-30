@@ -498,6 +498,7 @@ class Enemy:
         self.img = pg.image.load(rs_dir + self.img_path).convert_alpha()
         self.img_w, self.img_h = 64, 64
 
+        # Field of view
         v = Vector
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
         self.collision_obj = Circle(v(*self.c_pos), self.img_w/2)
@@ -509,6 +510,8 @@ class Enemy:
             v(-self.img_w*2, self.img_h*5), 
         ]
         self.FOV_obj = Poly(v(*self.c_pos), self.FOV_points, self.angle)
+        # How long between each random turn in idle mode
+        self.turn_delay_timer = random.uniform(0.5,2)
 
     def is_dead(self):
         pass
@@ -614,6 +617,12 @@ class Enemy:
                 self.vel.y = self.max_vel
             elif self.vel.y < -self.max_vel:
                 self.vel.y = -self.max_vel
+        else:
+            # Turn the enemy randomly when not chasing the player (in idle mode)
+            self.turn_delay_timer -= dt
+            if abs(self.angular_vel) < 2 and self.turn_delay_timer < 0:
+                self.turn_delay_timer = random.uniform(0.5, 2)
+                self.angular_vel += random.uniform(-12,12) # Doesn't have to be in radians
 
     def peer_collide(self):
         all_collisions = []

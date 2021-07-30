@@ -489,7 +489,7 @@ class Enemy:
 
         # Length from the center
         self.aim_line_length = 50
-        self.can_shoot = True
+        self.can_shoot = False
         self.shoot_counter = 0
         self.angle = 0
 
@@ -597,6 +597,13 @@ class Enemy:
             # Debug, draw aiming line
             # pg.draw.polygon(screen, (100,100,100, 32), LOS_poly.points)
 
+            # Update shoot counter here so the enemy doesn't immediately shoot when it detects the player
+            if not self.can_shoot:
+                self.shoot_counter += dt
+                if self.shoot_counter > 1:
+                    self.can_shoot = True
+                    self.shoot_counter = 0
+
             # Move the enemy
             self.vel = dv
             if self.vel.x > self.max_vel:
@@ -618,13 +625,6 @@ class Enemy:
         return all_collisions
 
     def update(self, dt):
-        # Update shoot counter
-        if not self.can_shoot:
-            self.shoot_counter += dt
-            if self.shoot_counter > 1:
-                self.can_shoot = True
-                self.shoot_counter = 0
-
         self.simulate_controls(dt)
         self.move(dt)
         self.FOV_obj.pos = Vector(*self.c_pos)

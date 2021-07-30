@@ -667,6 +667,7 @@ class LevelManager:
     def __init__(self, n=0):
         self.lockdown = False
         self.lockdown_timer = math.pi * 10 # 31.415 seconds
+        self.lockdown_opacity_counter = 0
         self.current_level = n
         self.levels = [TiledMap("/tilemap.json")]
         self.transparent_surface = pg.Surface(WORLD_SIZE, pg.SRCALPHA)
@@ -687,21 +688,22 @@ class LevelManager:
     def update(self, dt):
         if self.lockdown:
             self.lockdown_timer -= dt
+            self.lockdown_opacity_counter += dt
             if self.lockdown_timer < 0:
                 # Code here to show restart menu
                 self.lockdown = False
                 self.lockdown_timer = math.pi * 10
+                self.lockdown_opacity_counter = 0
 
     def draw_lockdown_filter(self):
         # Draw transparent red filter
         if self.lockdown:
             # Opacity ust be between 0 - 255
-            # The minimum opacity is 50. Since(sin + 1) * 50 produces a max value of 60, the maximum opacity is 110
-            opacity = 50 + (math.sin(self.lockdown_timer * 4) + 1) * 30
+            opacity = 50 + math.sin(self.lockdown_opacity_counter * 4) * 50
             screen.blit(self.transparent_surface, (0,0))
             self.transparent_surface.fill((255,255,255,0))
             size = window.get_rect().size
-            pg.draw.rect(self.transparent_surface, (252, 3, 69, opacity), (camera.pos.x-20, camera.pos.y-20, size[0]+40, size[1]+40))
+            pg.draw.rect(self.transparent_surface, (255, 0, 76, opacity), (camera.pos.x-20, camera.pos.y-20, size[0]+40, size[1]+40))
 
     def draw(self):
         self.current_map().draw()

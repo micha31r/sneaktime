@@ -513,9 +513,6 @@ class Enemy:
         # How long between each random turn in idle mode
         self.turn_delay_timer = random.uniform(0.5,2)
 
-    def is_dead(self):
-        pass
-
     def move(self, dt):
         dx = self.vel.x * dt
         dy = self.vel.y * dt

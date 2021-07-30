@@ -270,12 +270,13 @@ class ParticleManager:
 
 
 class Particle:
-    def __init__(self, x, y):
+    def __init__(self, x, y, color=(0,0,0)):
         self.pos = pg.Vector2(x, y)
         self.speed = random.randint(200, 400)
         self.radius = random.randint(4, 8)
         self.angle = math.radians(random.randint(0, 360))
-        self.lifespan = random.uniform(0.5, 1.5)
+        self.color = color
+        self.lifespan = random.uniform(0.3, 1)
         self.counter = 0
 
     def is_dead(self):
@@ -289,19 +290,24 @@ class Particle:
         self.radius -= (self.radius / self.lifespan) * dt
 
     def draw(self):
-        pg.draw.circle(screen, (128, 35, 255), self.pos, self.radius)
+        pg.draw.circle(screen, self.color, self.pos, self.radius)
 
 
 class Bullet:
-    def __init__(self, x, y, angle, flag):
+    radius = 10
+
+    def __init__(self, x, y, angle, tag):
         self.pos = pg.Vector2(x, y)
         self.speed = 800
-        self.radius = 10
         self.angle = angle
         self.lifespan = 1
         self.counter = 0
         self.collided = False
-        self.flag = ""
+        self.tag = tag
+        self.colors = {
+            "player": (128, 35, 255),
+            "enemy": (0,0,0),
+        }
         self.collision_obj = Circle(Vector(*self.pos), self.radius)
 
     def update(self, dt):
@@ -317,13 +323,13 @@ class Bullet:
 
         # Collision with enemies
         for i, e in enumerate(game.enemy_manager.entities):
-            if collide(self.collision_obj, e.collision_obj):
+            if self.tag == "player" and collide(self.collision_obj, e.collision_obj):
                 self.collided = True
                 del game.enemy_manager.entities[i] # Delete entity
 
     def create_particles(self):
         for i in range(random.randint(5, 10)):
-            game.particle_manager.add(Particle(*self.pos))
+            game.particle_manager.add(Particle(*self.pos, self.colors[self.tag]))
 
     def is_dead(self):
         if self.collided or self.counter > self.lifespan:
@@ -331,7 +337,7 @@ class Bullet:
             return True
 
     def draw(self):
-        pg.draw.circle(screen, (128, 35, 255), self.pos, self.radius)
+        pg.draw.circle(screen, self.colors[self.tag], self.pos, self.radius)
 
 
 class Player:
@@ -359,12 +365,7 @@ class Player:
 
     def shoot(self):
         if self.can_shoot:
-            game.particle_manager.add(Bullet(
-                self.pos.x + self.img_w/2, 
-                self.pos.y + self.img_h/2, 
-                self.angle, 
-                "player"
-            ))
+            game.particle_manager.add(Bullet(*self.c_pos, self.angle, "player"))
             # Set kickback velocity (opposite to the bullet's velocity)
             self.vel.x -= math.cos(self.angle) * self.max_vel
             self.vel.y -= math.sin(self.angle) * self.max_vel
@@ -447,8 +448,7 @@ class Player:
     def draw(self):
         if self.mode == "aim":
             # Draw aiming lines
-            start_pos = pg.Vector2(self.pos.x + self.img_w/2, self.pos.y + self.img_h/2)
-            end_pos = pg.Vector2(start_pos.x + math.cos(self.angle)*self.aim_line_length, start_pos.y + math.sin(self.angle)*self.aim_line_length)
+            end_pos = pg.Vector2(self.c_pos.x + math.cos(self.angle)*self.aim_line_length, self.c_pos.y + math.sin(self.angle)*self.aim_line_length)
             pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
 
         # Draw self
@@ -502,13 +502,13 @@ class Enemy:
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
         self.collision_obj = Circle(v(*self.c_pos), self.img_w/2)
         self.angular_vel = 0
-        self.FOV_quad = [
+        self.FOV_points = [
             v(-self.img_w/2, 0),
             v(self.img_w/2, 0), 
             v(self.img_w*2, self.img_h*5), 
             v(-self.img_w*2, self.img_h*5), 
         ]
-        self.FOV_obj = Poly(v(*self.c_pos), self.FOV_quad, self.angle)
+        self.FOV_obj = Poly(v(*self.c_pos), self.FOV_points, self.angle)
 
     def is_dead(self):
         pass
@@ -549,6 +549,14 @@ class Enemy:
         if abs(self.vel.y) < 0.05:
             self.vel.y = 0
 
+    def shoot(self):
+        if self.can_shoot:
+            game.particle_manager.add(Bullet(*self.c_pos, self.angle, "enemy"))
+            # Set kickback velocity (opposite to the bullet's velocity)
+            self.vel.x -= math.cos(self.angle) * self.max_vel
+            self.vel.y -= math.sin(self.angle) * self.max_vel
+            self.can_shoot = False
+
     def simulate_controls(self, dt):
         player = game.player
         dv = player.c_pos - self.c_pos
@@ -556,12 +564,38 @@ class Enemy:
         if collide(game.player.collision_obj, self.FOV_obj) or (abs(dv.x) < self.img_w and abs(dv.y) < self.img_h):
             # Set angular velocity
             # https://stackoverflow.com/questions/42258637/how-to-know-the-angle-between-two-vectors
-            angle = math.atan2(self.c_pos.y-player.c_pos.y, self.c_pos.x-player.c_pos.x) + math.radians(90)
-            diff = angle - self.FOV_obj.angle
+            angle = math.atan2(self.c_pos.y-player.c_pos.y, self.c_pos.x-player.c_pos.x)
+            rotated_angle = angle + math.radians(90)
+            self.angle = angle + math.radians(180)
+            a_diff = rotated_angle - self.FOV_obj.angle
+
             # Find the difference between two angles with sign
             # https://stackoverflow.com/questions/1878907/how-can-i-find-the-difference-between-two-angles
-            da = math.atan2(math.sin(diff), math.cos(diff))
+            da = math.atan2(math.sin(a_diff), math.cos(a_diff))
             self.angular_vel += da
+
+            # Shoot
+            # Only shoot if player is in direct line of sight
+            v = Vector
+
+            # Calculate how far the player is from the enemy
+            l_diff = abs((v(*player.c_pos) - v(*self.c_pos)).ln())
+
+            # Check for of the the player in the enemy's direct Line Of Sight
+            LOS_poly_points = [
+                v(-Bullet.radius, 0),
+                v(Bullet.radius, 0),
+                v(Bullet.radius, l_diff),
+                v(-Bullet.radius, l_diff),
+            ]
+            LOS_poly = Poly(v(*self.c_pos), LOS_poly_points, rotated_angle)
+            collision = game.tilemap.poly_collide(LOS_poly)
+            # Shoot if there's not obstables in the way
+            if not collision:
+                self.shoot()
+
+            # Debug, draw aiming line
+            # pg.draw.polygon(screen, (100,100,100, 32), LOS_poly.points)
 
             # Move the enemy
             self.vel = dv
@@ -598,8 +632,7 @@ class Enemy:
     def draw(self):
         if self.mode == "aim":
             # Draw aiming lines
-            start_pos = pg.Vector2(self.pos.x + self.img_w/2, self.pos.y + self.img_h/2)
-            end_pos = pg.Vector2(start_pos.x + math.cos(self.angle)*self.aim_line_length, start_pos.y + math.sin(self.angle)*self.aim_line_length)
+            end_pos = pg.Vector2(self.c_pos.x + math.cos(self.angle)*self.aim_line_length, self.c_pos.y + math.sin(self.angle)*self.aim_line_length)
             pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
 
         # Draw FOV area

@@ -677,7 +677,7 @@ class Enemy:
 class LevelManager:
     def __init__(self, n=0):
         self.lockdown = False
-        self.lockdown_timer = math.pi * 10 # 31.415 seconds
+        self.lockdown_timer = 10
         self.lockdown_opacity_counter = 0
         self.current_level = n
         self.levels = [TiledMap("/tilemap.json")]
@@ -701,10 +701,12 @@ class LevelManager:
             game.enemy_manager.detect_outside_FOV = True
             self.lockdown_timer -= dt
             self.lockdown_opacity_counter += dt
-            if self.lockdown_timer < 0:
+            # Deactivate lockdown when opacity is approximately 0 (50 + -1 * 50 = 0)
+            if self.lockdown_timer < 0 and math.sin(self.lockdown_opacity_counter) < -0.9:
+                print(self.lockdown_opacity_counter)
                 # Code here to show restart menu
                 self.lockdown = False
-                self.lockdown_timer = math.pi * 10
+                self.lockdown_timer = 10
                 self.lockdown_opacity_counter = 0
 
     def draw_lockdown_filter(self):

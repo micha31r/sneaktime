@@ -14,6 +14,9 @@ class TiledMap:
             "disguise": 41,
             "shotgun": 42, 
             "armour": 43,
+            # Traps
+            "laser_h": 33,
+            "laser_v": 34,
         }
 
         self.load_tilemap(path)
@@ -56,10 +59,9 @@ class TiledMap:
     def load_tiles(self):
         self.spawners = {}
         self.tiles = []
-        data = self.data
-        tilewidth = data["tilewidth"]
-        tileheight = data["tileheight"]
-        for layer in data["layers"]:
+        self.tilewidth = self.data["tilewidth"]
+        self.tileheight = self.data["tileheight"]
+        for layer in self.data["layers"]:
             if layer["type"] == "tilelayer":
                 for chunk in layer["chunks"]:
                     cw = chunk["width"]
@@ -69,15 +71,17 @@ class TiledMap:
                     tx = 0
                     ty = 0
                     for tile_id in chunk["data"]:
-                        render_x = (cx + tx) * tilewidth 
-                        render_y = (cy + ty) * tileheight
+                        render_x = (cx + tx) * self.tilewidth 
+                        render_y = (cy + ty) * self.tileheight
                         # means there is no tile
                         if tile_id != 0:
-                            rect = (render_x, render_y, tilewidth, tileheight)
+                            rect = (render_x, render_y, self.tilewidth, self.tileheight)
                             if layer["visible"]:
                                 self.tiles.append({
                                     "img": self.tileset[tile_id-1], 
-                                    "rect": rect
+                                    "rect": rect,
+                                    "tile_id": tile_id,
+                                    "layer_name": layer["name"],
                                 })
                             else:
                                 for k, v in self.spawner_tiles.items():
@@ -130,6 +134,18 @@ class TiledMap:
                             return r.overlap_v
         return all_collisions
 
+    def get_tile(self, x1, y1, target_layer_name=None, capture_all=False):
+        all_tiles = []
+        for t in self.tiles:
+            if not target_layer_name or target_layer_name == t["layer_name"]:
+                x2, y2, w2, h2 = t["rect"]
+                if (x1 == x2 and y1 == y2) or ((x1 > x2 and x1 < x2 + w2) and (y1 > y2 and y1 < y2 + h2)):
+                    if capture_all:
+                        all_tiles.append(t)
+                    else:
+                        return t
+        return all_tiles
+
     def draw(self, screen):
         for t in self.tiles:
             rect = t["rect"]
@@ -137,3 +153,6 @@ class TiledMap:
             if (rect[0] + rect[2] > self.game.camera.pos.x and rect[0] < self.game.camera.pos.x + WORLD_SIZE[0]) \
                 and (rect[1] + rect[3] > self.game.camera.pos.y and rect[1] < self.game.camera.pos.y + WORLD_SIZE[1]):
                 screen.blit(t["img"], rect)
+
+
+

@@ -9,6 +9,7 @@ import player
 import enemy
 import particle
 import powerup
+import trap
 from settings import *
 
 pg.init()
@@ -32,6 +33,7 @@ class GameManager:
         self.enemy_manager = enemy.EnemyManager(self)
         self.particle_manager = particle.ParticleManager(self)
         self.powerup_manager = powerup.PowerUpManager(self)
+        self.trap_manager = trap.TrapManager(self)
 
         # Load level
         self.level_manager.load_level(0)
@@ -59,6 +61,7 @@ class GameManager:
             self.enemy_manager.update(dt)
             self.particle_manager.update(dt)
             self.powerup_manager.update(dt)
+            self.trap_manager.update(dt)
         self.prev_mode = MODE
 
     def draw(self):
@@ -70,6 +73,7 @@ class GameManager:
             self.player.draw(self.screen)
             self.enemy_manager.draw(self.screen)
             self.particle_manager.draw(self.screen)
+            self.trap_manager.draw(self.screen)
 
             # Top layers
             self.level_manager.draw_lockdown_filter(self.screen)

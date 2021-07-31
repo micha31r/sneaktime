@@ -4,6 +4,7 @@ import pygame as pg
 import tilemap
 import enemy
 import powerup
+import trap
 from settings import *
 
 class LevelManager:
@@ -41,6 +42,16 @@ class LevelManager:
         points = spawners["shotgun"]
         for p in points:
             self.game.powerup_manager.add(powerup.ShotgunPowerUp(self.game, p[0], p[1]))
+
+        # Traps
+        # Horizontal and vertical lasers
+        points = spawners["laser_h"]
+        for p in points:
+            self.game.trap_manager.add(trap.LaserTrap(self.game, p[0], p[1], "horizontal"))
+
+        points = spawners["laser_v"]
+        for p in points:
+            self.game.trap_manager.add(trap.LaserTrap(self.game, p[0], p[1], "vertical"))
 
     def update(self, dt):
         if self.lockdown:

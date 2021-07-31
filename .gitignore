@@ -7,7 +7,6 @@ __pycache__/
 *.so
 
 # Custom
-resources/
 .DS_Store
 
 # Custom

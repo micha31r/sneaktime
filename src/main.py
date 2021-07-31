@@ -425,9 +425,12 @@ class Player:
         keys = pg.key.get_pressed()
 
         if self.can_shoot:
+            # Reduce the global game speed by 3/4 when in aiming mode
             if keys[pg.K_SPACE]:
+                game.change_speed(0.25)
                 self.mode = "aim"
             elif self.mode == "aim": # If key is just released and the control mode hasn't changed
+                game.change_speed(1)
                 self.shoot()
                 self.mode = "move"
 
@@ -441,10 +444,11 @@ class Player:
             elif keys[pg.K_DOWN]:
                 self.vel.y = self.max_vel
         elif self.mode == "aim":
+            # Aiming will not affected by the game speed
             if keys[pg.K_LEFT]:
-                self.angle -= 5 * dt
+                self.angle -= 5 * dt / game.speed
             elif keys[pg.K_RIGHT]:
-                self.angle += 5 * dt
+                self.angle += 5 * dt / game.speed
             # Limit angle
             if self.angle < 0:
                 self.angle = math.radians(360) + self.angle
@@ -720,6 +724,8 @@ class LevelManager:
 class GameManager:
     def __init__(self):
         self.prev_mode = MODE
+        self.target_speed = 1
+        self.speed = 1
 
     def setup(self):
         self.splash_screen = SplashScreen()
@@ -731,7 +737,13 @@ class GameManager:
         # Load level
         self.level_manager.load_level(0)
 
+    def change_speed(self, speed):
+        self.target_speed = speed
+
     def update(self, dt):
+        ds = self.target_speed - self.speed # Delta speed
+        self.speed += ds * 4 * dt # Increase the constant to increase the speed change
+        dt *= self.speed # Change global game speed
         mode_changed = False
         if self.prev_mode != MODE:
             mode_changed = True
@@ -796,7 +808,7 @@ while 1:
     # Render main surface after scaling it by the scale factor
     window.fill(BG_COLOR)
     window.blit(
-        pg.transform.scale(screen, (int(screen_size[0]*camera.scale.x), int(screen_size[1]*camera.scale.x))), 
+        pg.transform.scale(screen, (int(screen_size[0]*camera.scale.x), int(screen_size[1]*camera.scale.y))), 
         (0, 0), 
         (camera.pos.x*camera.scale.x, camera.pos.y*camera.scale.x, window.get_width(), window.get_height())
     )

@@ -368,7 +368,7 @@ class PowerUpManager:
             if collide(item.collision_obj, game.player.collision_obj):
                 item.activated = True
                 game.player.inventory.add(item)
-                game.particle_manager.generate(*game.player.c_pos, (0,0,0), (10,20))
+                game.particle_manager.generate(*game.player.c_pos, (128,35,255), (10,20))
                 del self.items[i]
 
     def draw(self):
@@ -410,6 +410,19 @@ class DisguisePowerUp:
         rotated_img = pg.transform.rotate(self.img, self.angle)
         new_rect = rotated_img.get_rect(center=center(*self.pos, self.img_w, self.img_h))
         screen.blit(rotated_img, new_rect)
+
+
+class ShotgunPowerUp(DisguisePowerUp):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.name = "shotgun"
+        self.img = pg.image.load(rs_dir + "/powerups/shotgun.png").convert_alpha()
+        self.img_w, self.img_h = self.img.get_size()
+        v = Vector
+        self.collision_obj = Poly(
+            v(*self.pos),
+            [v(0,0), v(self.img_w,0), v(self.img_w,self.img_h), v(0,self.img_h)]
+        )
 
 
 class InventoryManager:
@@ -465,7 +478,11 @@ class Player:
 
     def shoot(self):
         if self.can_shoot:
-            game.particle_manager.add(Bullet(*self.c_pos, self.angle, "player"))
+            if self.inventory.has_item("shotgun"):
+                for i in range(5):
+                    game.particle_manager.add(Bullet(*self.c_pos, self.angle + random.uniform(-1,1), "player"))
+            else:
+                game.particle_manager.add(Bullet(*self.c_pos, self.angle, "player"))
             # Set kickback velocity (opposite to the bullet's velocity)
             self.vel.x -= math.cos(self.angle) * self.max_vel
             self.vel.y -= math.sin(self.angle) * self.max_vel
@@ -779,7 +796,7 @@ class Enemy:
 class LevelManager:
     def __init__(self, n=0):
         self.lockdown = False
-        self.lockdown_timer = 10
+        self.lockdown_timer = 20
         self.lockdown_opacity_counter = 0
         self.current_level = n
         self.levels = [TiledMap("/tilemap.json")]
@@ -793,15 +810,23 @@ class LevelManager:
         self.load_level(n)
 
     def load_level(self, n):
+        spawners = self.current_map().spawners
+
         # Spawn enemies
-        spawn_p = self.current_map().spawners["enemy"]
-        for p in spawn_p:
+        points = spawners["enemy"]
+        for p in points:
             game.enemy_manager.add(Enemy(p[0], p[1]))
 
         # Spawn powerups
-        spawn_p = self.current_map().spawners["disguise"]
-        for p in spawn_p:
+        # Disguise powerups
+        points = spawners["disguise"]
+        for p in points:
             game.powerup_manager.add(DisguisePowerUp(p[0], p[1]))
+
+        # Shotgun powerups
+        points = spawners["shotgun"]
+        for p in points:
+            game.powerup_manager.add(ShotgunPowerUp(p[0], p[1]))
 
     def update(self, dt):
         if self.lockdown:

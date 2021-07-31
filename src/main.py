@@ -133,8 +133,12 @@ class SplashScreen:
 class TiledMap:
     def __init__(self, path):
         self.spawner_tiles = {
-            "player": 41, 
-            "enemy": 52, 
+            "player": 49,
+            "enemy": 50, 
+            # Power ups
+            "disguise": 41,
+            "shotgun": 42, 
+            "armour": 43,
         }
 
         self.load_tilemap(path)
@@ -267,6 +271,10 @@ class ParticleManager:
     def add(self, p):
         self.particles.append(p)
 
+    def generate(self, x, y, color, minmax=(5, 10)):
+        for i in range(random.randint(*minmax)):
+            game.particle_manager.add(Particle(x, y, color))
+
     def update(self, dt):
         for i, p in reversed(list(enumerate(self.particles))):
             p.update(dt)
@@ -314,7 +322,7 @@ class Bullet:
         self.collided = False
         self.tag = tag
         self.colors = {
-            "player": (128, 35, 255),
+            "player": (128,35,255),
             "enemy": (0,0,0),
         }
         self.collision_obj = Circle(Vector(*self.pos), self.radius)
@@ -335,18 +343,99 @@ class Bullet:
             if self.tag == "player" and collide(self.collision_obj, e.collision_obj):
                 self.collided = True
                 del game.enemy_manager.entities[i] # Delete entity
-
-    def create_particles(self):
-        for i in range(random.randint(5, 10)):
-            game.particle_manager.add(Particle(*self.pos, self.colors[self.tag]))
+                break
 
     def is_dead(self):
         if self.collided or self.counter > self.lifespan:
-            self.create_particles();
+            game.particle_manager.generate(*self.pos, self.colors[self.tag]);
             return True
 
     def draw(self):
         pg.draw.circle(screen, self.colors[self.tag], self.pos, self.radius)
+
+
+class PowerUpManager:
+    def __init__(self):
+        self.items = []
+
+    def add(self, item):
+        self.items.append(item)
+
+    def update(self, dt):
+        for i, item in reversed(list(enumerate(self.items))):
+            item.update(dt)
+            # Activate item and add to player's inventory after collision
+            if collide(item.collision_obj, game.player.collision_obj):
+                item.activated = True
+                game.player.inventory.add(item)
+                game.particle_manager.generate(*game.player.c_pos, (0,0,0), (10,20))
+                del self.items[i]
+
+    def draw(self):
+        for item in self.items:
+            item.draw()
+
+
+class DisguisePowerUp:
+    def __init__(self, x, y):
+        self.pos = pg.Vector2(x, y)
+        self.angle = 0 # in degrees
+        self.name = "disguise"
+        self.timer = 10
+        self.activated = False
+
+        self.img = pg.image.load(rs_dir + "/powerups/disguise.png").convert_alpha()
+        self.img_w, self.img_h = self.img.get_size()
+
+        v = Vector
+        self.collision_obj = Poly(
+            v(*self.pos),
+            [v(0,0), v(self.img_w,0), v(self.img_w,self.img_h), v(0,self.img_h)]
+        )
+
+    def is_expired(self):
+        if self.timer < 0:
+            game.particle_manager.generate(*game.player.c_pos, (128,35,255), (10,20))
+            return True
+
+    def update(self, dt):
+        if self.activated:
+            self.timer -= dt
+        else:
+            self.angle += 180 * dt
+            if self.angle > 360:
+                self.angle = 0
+
+    def draw(self):
+        rotated_img = pg.transform.rotate(self.img, self.angle)
+        new_rect = rotated_img.get_rect(center=center(*self.pos, self.img_w, self.img_h))
+        screen.blit(rotated_img, new_rect)
+
+
+class InventoryManager:
+    def __init__(self):
+        self.items = []
+
+    def add(self, item):
+        self.items.append(item)
+
+    def has_item(self, name):
+        for item in self.items:
+            if item.name == name:
+                return True
+
+    def get_item(self, name):
+        results = []
+        for item in self.items:
+            if item.name == name:
+                results.append(item)
+        return results
+
+    def update(self, dt):
+        for i, item in reversed(list(enumerate(self.items))):
+            item.update(dt)
+            if item.is_expired():
+                del self.items[i]
 
 
 class Player:
@@ -358,6 +447,8 @@ class Player:
         self.friction = 0.9
         self.mode = "move"
 
+        self.inventory = InventoryManager()
+
         # Length from the center
         self.aim_line_length = 50
         self.can_shoot = True
@@ -365,9 +456,9 @@ class Player:
         self.angle = 0
 
         # Sprites & Animation
-        self.img_path = "/characters/player.png"
-        self.img = pg.image.load(rs_dir + self.img_path).convert_alpha()
-        self.img_w, self.img_h = 64, 64
+        self.img = pg.image.load(rs_dir + "/characters/player.png").convert_alpha()
+        self.img_w, self.img_h = self.img.get_size()
+        self.enemy_img = pg.image.load(rs_dir + "/characters/enemy.png").convert_alpha()
 
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
         self.collision_obj = Circle(Vector(*self.c_pos), self.img_w/2)
@@ -414,6 +505,8 @@ class Player:
             self.vel.y = 0
 
     def update(self, dt):
+        self.inventory.update(dt)
+
         # Update shoot counter
         if not self.can_shoot:
             self.shoot_counter += dt
@@ -465,7 +558,10 @@ class Player:
             pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
 
         # Draw self
-        screen.blit(self.img, self.pos)
+        if self.inventory.has_item("disguise"):
+            screen.blit(self.enemy_img, self.pos)
+        else:
+            screen.blit(self.img, self.pos)
 
 
 class EnemyManager:
@@ -510,7 +606,7 @@ class Enemy:
         # Sprites & Animation
         self.img_path = "/characters/enemy.png"
         self.img = pg.image.load(rs_dir + self.img_path).convert_alpha()
-        self.img_w, self.img_h = 64, 64
+        self.img_w, self.img_h = self.img.get_size()
 
         # Field of view
         v = Vector
@@ -579,68 +675,74 @@ class Enemy:
     def simulate_controls(self, dt, detect_outside_FOV):
         player = game.player
         dv = player.c_pos - self.c_pos
+
+        detected_player = False
         
-        if detect_outside_FOV or (collide(game.player.collision_obj, self.FOV_obj) or (abs(dv.x) < self.img_w and abs(dv.y) < self.img_h)):
-            if not game.level_manager.lockdown:
-                # Initiate lockdown after a few seconds delay
-                self.trigger_lockdown_timer -= dt
-                if self.trigger_lockdown_timer < 0:
-                    game.level_manager.lockdown = True
-                    self.trigger_lockdown_timer = 5
+        if not player.inventory.has_item("disguise"):
+            if detect_outside_FOV or (collide(game.player.collision_obj, self.FOV_obj) or (abs(dv.x) < self.img_w and abs(dv.y) < self.img_h)):
+                detected_player = True
+                
+                if not game.level_manager.lockdown:
+                    # Initiate lockdown after a few seconds delay
+                    self.trigger_lockdown_timer -= dt
+                    if self.trigger_lockdown_timer < 0:
+                        game.level_manager.lockdown = True
+                        self.trigger_lockdown_timer = 5
 
-            # Set angular velocity
-            # https://stackoverflow.com/questions/42258637/how-to-know-the-angle-between-two-vectors
-            angle = math.atan2(self.c_pos.y-player.c_pos.y, self.c_pos.x-player.c_pos.x)
-            rotated_angle = angle + math.radians(90)
-            self.angle = angle + math.radians(180)
-            a_diff = rotated_angle - self.FOV_obj.angle
+                # Set angular velocity
+                # https://stackoverflow.com/questions/42258637/how-to-know-the-angle-between-two-vectors
+                angle = math.atan2(self.c_pos.y-player.c_pos.y, self.c_pos.x-player.c_pos.x)
+                rotated_angle = angle + math.radians(90)
+                self.angle = angle + math.radians(180)
+                a_diff = rotated_angle - self.FOV_obj.angle
 
-            # Find the difference between two angles with sign
-            # https://stackoverflow.com/questions/1878907/how-can-i-find-the-difference-between-two-angles
-            da = math.atan2(math.sin(a_diff), math.cos(a_diff))
-            self.angular_vel += da
+                # Find the difference between two angles with sign
+                # https://stackoverflow.com/questions/1878907/how-can-i-find-the-difference-between-two-angles
+                da = math.atan2(math.sin(a_diff), math.cos(a_diff))
+                self.angular_vel += da
 
-            # Shoot
-            # Only shoot if player is in direct line of sight
-            v = Vector
+                # Shoot
+                # Only shoot if player is in direct line of sight
+                v = Vector
 
-            # Calculate how far the player is from the enemy
-            l_diff = abs((v(*player.c_pos) - v(*self.c_pos)).ln())
+                # Calculate how far the player is from the enemy
+                l_diff = abs((v(*player.c_pos) - v(*self.c_pos)).ln())
 
-            # Check for of the the player in the enemy's direct Line Of Sight
-            LOS_poly_points = [
-                v(-Bullet.radius, 0),
-                v(Bullet.radius, 0),
-                v(Bullet.radius, l_diff),
-                v(-Bullet.radius, l_diff),
-            ]
-            LOS_poly = Poly(v(*self.c_pos), LOS_poly_points, rotated_angle)
-            collision = game.level_manager.current_map().poly_collide(LOS_poly)
-            # Shoot if there's not obstables in the way
-            if not collision:
-                self.shoot()
+                # Check for of the the player in the enemy's direct Line Of Sight
+                LOS_poly_points = [
+                    v(-Bullet.radius, 0),
+                    v(Bullet.radius, 0),
+                    v(Bullet.radius, l_diff),
+                    v(-Bullet.radius, l_diff),
+                ]
+                LOS_poly = Poly(v(*self.c_pos), LOS_poly_points, rotated_angle)
+                collision = game.level_manager.current_map().poly_collide(LOS_poly)
+                # Shoot if there's not obstables in the way
+                if not collision:
+                    self.shoot()
 
-            # Debug, draw aiming line
-            # pg.draw.polygon(screen, (100,100,100, 32), LOS_poly.points)
+                # Debug, draw aiming line
+                # pg.draw.polygon(screen, (100,100,100, 32), LOS_poly.points)
 
-            # Update shoot counter here so the enemy doesn't immediately shoot when it detects the player
-            if not self.can_shoot:
-                self.shoot_counter += dt
-                if self.shoot_counter > 1:
-                    self.can_shoot = True
-                    self.shoot_counter = 0
+                # Update shoot counter here so the enemy doesn't immediately shoot when it detects the player
+                if not self.can_shoot:
+                    self.shoot_counter += dt
+                    if self.shoot_counter > 1:
+                        self.can_shoot = True
+                        self.shoot_counter = 0
 
-            # Move the enemy
-            self.vel = dv
-            if self.vel.x > self.max_vel:
-                self.vel.x = self.max_vel
-            elif self.vel.x < -self.max_vel:
-                self.vel.x = -self.max_vel
-            if self.vel.y > self.max_vel:
-                self.vel.y = self.max_vel
-            elif self.vel.y < -self.max_vel:
-                self.vel.y = -self.max_vel
-        else:
+                # Move the enemy
+                self.vel = dv
+                if self.vel.x > self.max_vel:
+                    self.vel.x = self.max_vel
+                elif self.vel.x < -self.max_vel:
+                    self.vel.x = -self.max_vel
+                if self.vel.y > self.max_vel:
+                    self.vel.y = self.max_vel
+                elif self.vel.y < -self.max_vel:
+                    self.vel.y = -self.max_vel
+
+        if not detected_player:
             # Turn the enemy randomly when not chasing the player (in idle mode)
             self.turn_delay_timer -= dt
             if abs(self.angular_vel) < 2 and self.turn_delay_timer < 0:
@@ -696,6 +798,11 @@ class LevelManager:
         for p in spawn_p:
             game.enemy_manager.add(Enemy(p[0], p[1]))
 
+        # Spawn powerups
+        spawn_p = self.current_map().spawners["disguise"]
+        for p in spawn_p:
+            game.powerup_manager.add(DisguisePowerUp(p[0], p[1]))
+
     def update(self, dt):
         if self.lockdown:
             game.enemy_manager.detect_outside_FOV = True
@@ -734,6 +841,7 @@ class GameManager:
         self.player = Player()
         self.enemy_manager = EnemyManager()
         self.particle_manager = ParticleManager()
+        self.powerup_manager = PowerUpManager()
 
         # Load level
         self.level_manager.load_level(0)
@@ -757,6 +865,7 @@ class GameManager:
             self.player.update(dt)
             self.enemy_manager.update(dt)
             self.particle_manager.update(dt)
+            self.powerup_manager.update(dt)
         self.prev_mode = MODE
 
     def draw(self):
@@ -764,6 +873,7 @@ class GameManager:
             self.splash_screen.draw()
         if MODE == "main":
             self.level_manager.draw()
+            self.powerup_manager.draw()
             self.player.draw()
             self.enemy_manager.draw()
             self.particle_manager.draw()

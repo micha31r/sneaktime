@@ -2,7 +2,6 @@ import sys, json, math, random
 import pygame as pg
 from os import path
 
-from settings import *
 import camera
 import ui
 import level
@@ -10,6 +9,7 @@ import player
 import enemy
 import particle
 import powerup
+from settings import *
 
 pg.init()
 pg.display.set_caption("Infiltrate")

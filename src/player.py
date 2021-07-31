@@ -2,10 +2,10 @@ import random
 import pygame as pg
 from collision import *
 
-from settings import *
-from scripts import *
 import inventory
 import bullet
+from settings import *
+from scripts import *
 
 class Player:
     def __init__(self, game):

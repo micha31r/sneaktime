@@ -1,10 +1,10 @@
 import math
 import pygame as pg
 
-from settings import *
 import tilemap
 import enemy
 import powerup
+from settings import *
 
 class LevelManager:
     def __init__(self, game, n=0):

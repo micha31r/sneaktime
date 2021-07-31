@@ -2,7 +2,7 @@ import pygame as pg
 from settings import *
 
 pg.init()
-font = pg.font.Font(rs_dir + "/m6x11.ttf", 64)
+font = pg.font.Font(rs_dir + "/fonts/SpaceGrotesk_Medium.ttf", 64)
 
 class SplashScreen:
     def __init__(self):

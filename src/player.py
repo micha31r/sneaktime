@@ -4,6 +4,7 @@ from collision import *
 
 import inventory
 import bullet
+import ui
 from settings import *
 from scripts import *
 
@@ -11,12 +12,12 @@ class Player:
     def __init__(self, game):
         self.game = game
 
-        x, y, _, _ = game.level_manager.current_map().spawners["player"][0]
-        self.pos = pg.Vector2(x, y)
+        self.pos = pg.Vector2(0, 0)
         self.vel = pg.Vector2()
         self.max_vel = 260
         self.friction = 0.9
         self.mode = "move"
+        self.alive = True
 
         self.inventory = inventory.InventoryManager()
 
@@ -33,6 +34,15 @@ class Player:
 
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
         self.collision_obj = Circle(Vector(*self.c_pos), self.img_w/2)
+
+    def die(self):
+        if self.alive:
+            if self.inventory.has_item("armour"):
+                pass
+            else:
+                self.alive = False
+                self.game.particle_manager.generate(*self.c_pos, (128, 35, 255), (10, 20))
+                self.game.change_speed(0, 1)
 
     def shoot(self):
         if self.can_shoot:
@@ -83,6 +93,13 @@ class Player:
             self.vel.y = 0
 
     def update(self, dt):
+        if not self.alive:
+            if self.game.speed < 0.01:
+                pass
+                # self.game.level_screen = ui.LevelScreen(self.game)
+                # self.game.mode = "level"
+                # self.game.speed = 1
+
         self.inventory.update(dt)
 
         # Update shoot counter

@@ -27,7 +27,12 @@ class LevelManager:
     def load_level(self, n=None):
         if not n:
             n = self.current_level
+
         spawners = self.current_map().spawners
+
+        # Set player position
+        x, y, _, _ = spawners["player"][0]
+        self.game.player.pos = pg.Vector2(x, y)
 
         # Spawn enemies
         points = spawners["enemy"]

@@ -80,7 +80,7 @@ class LaserTrap:
                 self.activated = False
                 self.duration_timer = self.duration
             if collide(self.collision_obj, self.game.player.collision_obj):
-                print("Laser collision")
+                self.game.player.die()
         else:
             self.delay_timer -= dt
             if self.delay_timer < 0:
@@ -134,7 +134,7 @@ class NinjaStarTrap(LaserTrap):
             self.angle = 0
 
         if collide(self.collision_obj, self.game.player.collision_obj):
-            print("Laser collision")
+            self.game.player.die()
 
     def draw(self, screen):
         rotated_img = pg.transform.rotate(self.img, self.angle)

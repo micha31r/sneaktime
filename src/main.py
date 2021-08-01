@@ -24,6 +24,7 @@ class GameManager:
         self.prev_mode = self.mode
         self.target_speed = 1
         self.speed = 1
+        self.speed_change_constant = 4
         self.camera = camera.Camera(self)
         self.splash_screen = ui.SplashScreen(self)
         self.level_manager = level.LevelManager(self)
@@ -33,12 +34,16 @@ class GameManager:
         self.powerup_manager = powerup.PowerUpManager(self)
         self.trap_manager = trap.TrapManager(self)
 
-    def change_speed(self, speed):
+    def change_speed(self, speed, const=None):
         self.target_speed = speed
+        if const:
+            self.speed_change_constant = const
 
     def update(self, dt):
         ds = self.target_speed - self.speed # Delta speed
-        self.speed += ds * 4 * dt # Increase the constant to increase the speed change
+        self.speed += ds * self.speed_change_constant * dt # Increase the constant to increase the speed change
+        if abs(ds) < 0.01:
+            self.speed_change_constant = 4 # Reset speed change constant
         dt *= self.speed # Change global game speed
 
         if self.mode == "splash":

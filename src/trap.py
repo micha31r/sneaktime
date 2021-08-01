@@ -189,7 +189,8 @@ class CameraTrap:
         self.FOV_obj.angle = math.radians(self.angle + self.displacement)
 
         if collide(self.FOV_obj, self.game.player.collision_obj):
-            self.game.level_manager.lockdown = True
+            if not self.game.player.inventory.has_item("disguise"):
+                self.game.level_manager.lockdown = True
 
     def draw(self, screen):
         # Draw FOV area

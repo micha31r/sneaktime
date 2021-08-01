@@ -1,4 +1,5 @@
 import pygame as pg
+from collision import *
 
 def center(x, y, w, h, default=True):
     if not default:

@@ -17,6 +17,8 @@ class TiledMap:
             # Traps
             "laser_h": 33,
             "laser_v": 34,
+            "ninja_star_h": 35,
+            "ninja_star_v": 36,
         }
 
         self.load_tilemap(path)
@@ -84,6 +86,7 @@ class TiledMap:
                                     "layer_name": layer["name"],
                                 })
                             else:
+                                # Spawner tile layers must be hidden
                                 for k, v in self.spawner_tiles.items():
                                     if tile_id == v:
                                         if k not in self.spawners:

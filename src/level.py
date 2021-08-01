@@ -53,6 +53,15 @@ class LevelManager:
         for p in points:
             self.game.trap_manager.add(trap.LaserTrap(self.game, p[0], p[1], "vertical"))
 
+        # Horizontal and vertical ninja stars
+        points = spawners["ninja_star_h"]
+        for p in points:
+            self.game.trap_manager.add(trap.NinjaStarTrap(self.game, p[0], p[1], "horizontal"))
+
+        points = spawners["ninja_star_v"]
+        for p in points:
+            self.game.trap_manager.add(trap.NinjaStarTrap(self.game, p[0], p[1], "vertical"))
+
     def update(self, dt):
         if self.lockdown:
             self.game.enemy_manager.detect_outside_FOV = True

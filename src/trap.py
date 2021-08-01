@@ -129,7 +129,7 @@ class NinjaStarTrap(LaserTrap):
         # Update collision object's position
         self.collision_obj.pos = self.render_pos
 
-        self.angle += 360 * dt
+        self.angle -= 360 * dt
         if self.angle > 360:
             self.angle = 0
 

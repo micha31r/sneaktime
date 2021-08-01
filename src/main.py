@@ -26,6 +26,12 @@ class GameManager:
         self.speed = 1
         self.camera = camera.Camera(self)
         self.splash_screen = ui.SplashScreen(self)
+        self.level_manager = level.LevelManager(self)
+        self.player = player.Player(self)
+        self.enemy_manager = enemy.EnemyManager(self)
+        self.particle_manager = particle.ParticleManager(self)
+        self.powerup_manager = powerup.PowerUpManager(self)
+        self.trap_manager = trap.TrapManager(self)
 
     def change_speed(self, speed):
         self.target_speed = speed
@@ -41,16 +47,13 @@ class GameManager:
             if self.prev_mode != self.mode:
                 self.story_screen = ui.StoryScreen(self)
             self.story_screen.update(dt)
+        if self.mode == "level":
+            if self.prev_mode != self.mode:
+                self.level_screen = ui.LevelScreen(self)
+            self.level_screen.update(dt)
         if self.mode == "main":
             if self.prev_mode != self.mode:
-                # Create objects
-                self.level_manager = level.LevelManager(self)
-                self.player = player.Player(self)
-                self.enemy_manager = enemy.EnemyManager(self)
-                self.particle_manager = particle.ParticleManager(self)
-                self.powerup_manager = powerup.PowerUpManager(self)
-                self.trap_manager = trap.TrapManager(self)
-                self.level_manager.load_level(0) # Load level
+                self.level_manager.load_level() # Load level
                 self.camera.shake(200)
             self.camera.update(dt)
             self.level_manager.update(dt)
@@ -67,6 +70,8 @@ class GameManager:
             self.splash_screen.draw(self.screen)
         if self.mode == "story":
             self.story_screen.draw(self.screen)
+        if self.mode == "level":
+            self.level_screen.draw(self.screen)
         if self.mode == "main":
             self.level_manager.draw(self.screen)
             self.powerup_manager.draw(self.screen)

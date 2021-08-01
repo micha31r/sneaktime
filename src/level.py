@@ -24,7 +24,9 @@ class LevelManager:
         self.current_level = n
         self.load_level(n)
 
-    def load_level(self, n):
+    def load_level(self, n=None):
+        if not n:
+            n = self.current_level
         spawners = self.current_map().spawners
 
         # Spawn enemies

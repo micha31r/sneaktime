@@ -60,6 +60,11 @@ class StoryScreen:
         self.delay = 1
 
     def update(self, dt):
+        keys = pg.key.get_pressed()
+        # Speed up text
+        if keys[pg.K_SPACE]: self.game.speed = 4
+        else: self.game.speed = 1
+        
         t = self.lines[self.line_index]
         if t.index == len(t.text):
             self.delay -= dt
@@ -68,9 +73,9 @@ class StoryScreen:
                 self.line_index += 1
                 t.focus = False
             if self.line_index == len(self.lines)-1:
-                keys = pg.key.get_pressed()
                 if keys[pg.K_SPACE]:
-                    self.game.mode = "main"
+                    self.game.mode = "level"
+                    self.game.speed = 1
         t.update(dt)
 
 
@@ -83,4 +88,23 @@ class StoryScreen:
             x, _, _, _ = t.text_obj.get_rect(center=center(0, 0, *self.game.window.get_size()))
             t.pos = pg.Vector2(x, self.start_y + t.ch * i)
             t.draw(screen)
+
+class LevelScreen:
+    def __init__(self, game):
+        self.game = game
+        self.text = Text(0, 0, 'sector ' + str(self.game.level_manager.current_level), (255, 255, 255), 0.05)
+        self.delay = 4
+
+    def update(self, dt):
+        if self.text.index == len(self.text.text):
+            self.delay -= dt
+            if self.delay < 0:
+                self.game.mode = "main"
+        self.text.update(dt)
+
+    def draw(self, screen):
+        # Align text center horizontally
+        x, y, _, _ = self.text.text_obj.get_rect(center=center(0, 0, *self.game.window.get_size()))
+        self.text.pos = pg.Vector2(x, y)
+        self.text.draw(screen)
 

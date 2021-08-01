@@ -141,3 +141,57 @@ class NinjaStarTrap(LaserTrap):
         new_rect = rotated_img.get_rect(center=self.render_pos)
         screen.blit(rotated_img, new_rect)
 
+
+class CameraTrap:
+    def __init__(self, game, x, y, direction):
+        self.game = game
+        self.movement_counter = 0
+        # 160 degrees of movement
+        self.total_turn_angle = 100
+        self.half_cycle_time = abs(3/self.total_turn_angle) * 50
+
+        tw = self.game.level_manager.current_map().tilewidth
+        th = self.game.level_manager.current_map().tileheight
+
+        # Angles are all in degrees
+        self.render_angle = 0
+
+        if direction == "left":
+            self.pos = pg.Vector2(x+tw, y+th/2)
+            self.angle = 40
+        elif direction == "right":
+            self.pos = pg.Vector2(x, y+th/2)
+            self.angle = -140
+        elif direction == "up":
+            self.pos = pg.Vector2(x+tw/2, y+th)
+            self.angle = 130
+        else:
+            self.pos = pg.Vector2(x+tw/2, y)
+            self.angle = -50
+
+        # Field of view
+        v = Vector
+        self.angular_vel = 0
+        self.FOV_points = [
+            v(-5, 0),
+            v(5, 0), 
+            v(150, 300), 
+            v(-150, 300), 
+        ]
+        self.FOV_obj = Poly(v(*self.pos), self.FOV_points, self.angle)
+
+    def update(self, dt):
+        # Calculate displacement based on sin(movement_counter)
+        self.movement_counter += self.half_cycle_time * dt
+        self.displacement = (math.sin(self.movement_counter) + 1) * self.total_turn_angle / 2 # 160 degrees FOV
+        
+        # Set the render position to be origin + displacement
+        self.FOV_obj.angle = math.radians(self.angle + self.displacement)
+
+        if collide(self.FOV_obj, self.game.player.collision_obj):
+            self.game.level_manager.lockdown = True
+
+    def draw(self, screen):
+        # Draw FOV area
+        pg.draw.polygon(self.game.enemy_manager.transparent_surface, (0, 0, 0, 32), self.FOV_obj.points)
+

@@ -19,6 +19,10 @@ class TiledMap:
             "laser_v": 34,
             "ninja_star_h": 35,
             "ninja_star_v": 36,
+            "camera_l": 37,
+            "camera_r": 38,
+            "camera_u": 39,
+            "camera_d": 40,
         }
 
         self.load_tilemap(path)
@@ -60,6 +64,8 @@ class TiledMap:
 
     def load_tiles(self):
         self.spawners = {}
+        for k in self.spawner_tiles:
+            self.spawners[k] = []
         self.tiles = []
         self.tilewidth = self.data["tilewidth"]
         self.tileheight = self.data["tileheight"]
@@ -89,8 +95,6 @@ class TiledMap:
                                 # Spawner tile layers must be hidden
                                 for k, v in self.spawner_tiles.items():
                                     if tile_id == v:
-                                        if k not in self.spawners:
-                                            self.spawners[k] = []
                                         self.spawners[k].append(rect)
                         tx += 1
                         if tx == cw:

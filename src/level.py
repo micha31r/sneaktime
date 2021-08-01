@@ -62,6 +62,23 @@ class LevelManager:
         for p in points:
             self.game.trap_manager.add(trap.NinjaStarTrap(self.game, p[0], p[1], "vertical"))
 
+        # Left, Right, Up and Down cameras
+        points = spawners["camera_l"]
+        for p in points:
+            self.game.trap_manager.add(trap.CameraTrap(self.game, p[0], p[1], "left"))
+
+        points = spawners["camera_r"]
+        for p in points:
+            self.game.trap_manager.add(trap.CameraTrap(self.game, p[0], p[1], "right"))
+
+        points = spawners["camera_u"]
+        for p in points:
+            self.game.trap_manager.add(trap.CameraTrap(self.game, p[0], p[1], "up"))
+
+        points = spawners["camera_d"]
+        for p in points:
+            self.game.trap_manager.add(trap.CameraTrap(self.game, p[0], p[1], "down"))
+
     def update(self, dt):
         if self.lockdown:
             self.game.enemy_manager.detect_outside_FOV = True

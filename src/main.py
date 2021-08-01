@@ -13,7 +13,7 @@ import trap
 from settings import *
 
 pg.init()
-pg.display.set_caption("Infiltrate")
+pg.display.set_caption("BreakIn()")
 
 class GameManager:
     def __init__(self):
@@ -24,8 +24,6 @@ class GameManager:
         self.prev_mode = self.mode
         self.target_speed = 1
         self.speed = 1
-
-    def setup(self):
         self.camera = camera.Camera(self)
         self.splash_screen = ui.SplashScreen(self)
 
@@ -39,8 +37,10 @@ class GameManager:
 
         if self.mode == "splash":
             self.splash_screen.update(dt)
-        if self.mode == "menu":
-            pass
+        if self.mode == "story":
+            if self.prev_mode != self.mode:
+                self.story_screen = ui.StoryScreen(self)
+            self.story_screen.update(dt)
         if self.mode == "main":
             if self.prev_mode != self.mode:
                 # Create objects
@@ -51,6 +51,7 @@ class GameManager:
                 self.powerup_manager = powerup.PowerUpManager(self)
                 self.trap_manager = trap.TrapManager(self)
                 self.level_manager.load_level(0) # Load level
+                self.camera.shake(200)
             self.camera.update(dt)
             self.level_manager.update(dt)
             self.player.update(dt)
@@ -64,6 +65,8 @@ class GameManager:
     def draw(self):
         if self.mode == "splash":
             self.splash_screen.draw(self.screen)
+        if self.mode == "story":
+            self.story_screen.draw(self.screen)
         if self.mode == "main":
             self.level_manager.draw(self.screen)
             self.powerup_manager.draw(self.screen)
@@ -118,5 +121,4 @@ class GameManager:
 
 
 game = GameManager()
-game.setup()
 game.event_loop()

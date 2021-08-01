@@ -1,28 +1,41 @@
 import pygame as pg
-from settings import *
 
-pg.init()
-font = pg.font.Font(rs_dir + "/fonts/SpaceGrotesk_Medium.ttf", 64)
+from settings import *
+from scripts import *
 
 class SplashScreen:
-    def __init__(self):
-        self.text = font.render('Demo', True, (0, 0, 0))
-        self.rect = self.text.get_rect()
-        self.opacity = 0
-        self.timer = 0
+    def __init__(self, game):
+        self.game = game
+        self.heading = Text(0, 0, 'Infiltrate', (255, 255, 255), 0.05, 64)
+        self.subheading = Text(0, 0, 'Press space to start', (255, 255, 255), 0.05)
+        self.show_subheading = False
+        self.delay = 2
 
     def update(self, dt):
-        self.timer += dt
-        sec = self.timer / 1000
-        if sec <= 0.5:
-            self.opacity += 255 / (0.5 / (dt / 1000))
-            self.text.set_alpha(self.opacity)
-        elif sec > 1.5 and sec <= 2.5:
-            self.opacity -= 255 / (0.5 / (dt / 1000))
-            self.text.set_alpha(self.opacity)
-        elif sec > 3.5:
-            global MODE
-            MODE = "main"
+        self.heading.update(dt)
+        # Align text to the center of the screen
+        x, y, _, _ = self.heading.text_obj.get_rect(center=center(0, 0, *self.game.window.get_size()))
+        self.heading.pos = pg.Vector2(x, y)
 
-    def draw(self):
-        screen.blit(self.text, (0,0))
+        if self.show_subheading:
+            self.subheading.update(dt)
+            # Align text to the center of the screen
+            x, y, _, _ = self.subheading.text_obj.get_rect(center=center(0, 0, *self.game.window.get_size()))
+            self.subheading.pos = pg.Vector2(x, y + self.heading.ch)
+
+        if not self.show_subheading and self.heading.index == len(self.heading.text):
+            self.delay -= dt
+            if self.delay < 0:
+                self.show_subheading = True
+                self.heading.focus = False
+
+        if self.show_subheading and self.subheading.index == len(self.subheading.text):
+            keys = pg.key.get_pressed()
+            if keys[pg.K_SPACE]:
+                self.game.mode = "main"
+
+    def draw(self, screen):
+        self.heading.draw(screen)
+        if self.show_subheading:
+            self.subheading.draw(screen)
+

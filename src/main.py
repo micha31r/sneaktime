@@ -20,23 +20,14 @@ class GameManager:
         self.window = pg.display.set_mode(WINDOW_SIZE, pg.RESIZABLE)
         self.screen = pg.Surface(WORLD_SIZE)
         self.clock = pg.time.Clock()
-
-        self.prev_mode = MODE
+        self.mode = "splash"
+        self.prev_mode = self.mode
         self.target_speed = 1
         self.speed = 1
 
     def setup(self):
         self.camera = camera.Camera(self)
-        self.splash_screen = ui.SplashScreen()
-        self.level_manager = level.LevelManager(self)
-        self.player = player.Player(self)
-        self.enemy_manager = enemy.EnemyManager(self)
-        self.particle_manager = particle.ParticleManager(self)
-        self.powerup_manager = powerup.PowerUpManager(self)
-        self.trap_manager = trap.TrapManager(self)
-
-        # Load level
-        self.level_manager.load_level(0)
+        self.splash_screen = ui.SplashScreen(self)
 
     def change_speed(self, speed):
         self.target_speed = speed
@@ -46,28 +37,34 @@ class GameManager:
         self.speed += ds * 4 * dt # Increase the constant to increase the speed change
         dt *= self.speed # Change global game speed
 
-        self.camera.update(dt)
-
-        mode_changed = False
-        if self.prev_mode != MODE:
-            mode_changed = True
-        if MODE == "splash":
+        if self.mode == "splash":
             self.splash_screen.update(dt)
-        if MODE == "menu":
+        if self.mode == "menu":
             pass
-        if MODE == "main":
+        if self.mode == "main":
+            if self.prev_mode != self.mode:
+                # Create objects
+                self.level_manager = level.LevelManager(self)
+                self.player = player.Player(self)
+                self.enemy_manager = enemy.EnemyManager(self)
+                self.particle_manager = particle.ParticleManager(self)
+                self.powerup_manager = powerup.PowerUpManager(self)
+                self.trap_manager = trap.TrapManager(self)
+                self.level_manager.load_level(0) # Load level
+            self.camera.update(dt)
             self.level_manager.update(dt)
             self.player.update(dt)
             self.enemy_manager.update(dt)
             self.particle_manager.update(dt)
             self.powerup_manager.update(dt)
             self.trap_manager.update(dt)
-        self.prev_mode = MODE
+
+        self.prev_mode = self.mode
 
     def draw(self):
-        if MODE == "splash":
+        if self.mode == "splash":
             self.splash_screen.draw(self.screen)
-        if MODE == "main":
+        if self.mode == "main":
             self.level_manager.draw(self.screen)
             self.powerup_manager.draw(self.screen)
             self.player.draw(self.screen)

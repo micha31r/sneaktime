@@ -22,7 +22,7 @@ class Player:
 
         # Length from the center
         self.aim_line_length = 50
-        self.can_shoot = True
+        self.can_shoot = False
         self.shoot_counter = 0
         self.angle = 0
 

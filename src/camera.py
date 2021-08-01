@@ -1,3 +1,4 @@
+import random
 import pygame as pg
 
 from settings import *
@@ -13,6 +14,13 @@ class Camera:
         self.friction = 0.8
         self.do_track = True
         self.multiplier = 4
+        self.do_shake = False
+        self.shake_amount = 0
+        self.shake_displacement = pg.Vector2()
+
+    def shake(self, amount):
+        self.do_shake = True
+        self.shake_amount = amount
 
     def track(self, rect):
         if self.do_track:
@@ -65,3 +73,21 @@ class Camera:
             self.vel.x = 0
         if abs(self.vel.y) < 0.01:
             self.vel.y = 0
+
+        # Remove previous displacement
+        self.pos -= self.shake_displacement
+
+        # Remove shake if too small
+        if self.do_shake:
+            self.shake_amount *= self.friction
+            self.shake_displacement.x = random.randint(-10,10) * self.shake_amount * dt
+            self.shake_displacement.y = random.randint(-10,10) * self.shake_amount * dt
+            if self.shake_amount < 0.01:
+                self.shake_amount = 0
+                self.do_shake = False
+                self.shake_displacement.x = 0
+                self.shake_displacement.y = 0
+
+        # Apply new displacement
+        self.pos += self.shake_displacement
+

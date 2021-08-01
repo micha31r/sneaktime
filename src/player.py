@@ -37,13 +37,16 @@ class Player:
     def shoot(self):
         if self.can_shoot:
             if self.inventory.has_item("shotgun"):
-                for i in range(5):
+                self.game.particle_manager.add(bullet.Bullet(self.game, *self.c_pos, self.angle, "player"))
+                for i in range(4):
                     self.game.particle_manager.add(bullet.Bullet(self.game, *self.c_pos, self.angle + random.uniform(-1,1), "player"))
             else:
                 self.game.particle_manager.add(bullet.Bullet(self.game, *self.c_pos, self.angle, "player"))
             # Set kickback velocity (opposite to the bullet's velocity)
             self.vel.x -= math.cos(self.angle) * self.max_vel
             self.vel.y -= math.sin(self.angle) * self.max_vel
+            # Shake camera
+            self.game.camera.shake(100)
             self.can_shoot = False
 
     def move(self, dt):

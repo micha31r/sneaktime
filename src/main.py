@@ -112,8 +112,8 @@ class GameManager:
                     )
                 ), (0, 0), 
                 (
-                    self.camera.pos.x*self.camera.scale.x,
-                    self.camera.pos.y*self.camera.scale.x,
+                    self.camera.pos.x * self.camera.scale.x,
+                    self.camera.pos.y * self.camera.scale.y,
                     self.window.get_width(), self.window.get_height()
                 )
             )

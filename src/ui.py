@@ -46,17 +46,17 @@ class StoryScreen:
         self.game = game
         self.lines = [
             Text(0, 0, 'Mission:', (128, 35, 255), 0.05),
-            # Text(0, 0, 'The bad guys have stole the source code of the world\'s', (255, 255, 255), 0.05),
-            # Text(0, 0, 'most powerful AI. You need to break into their super', (255, 255, 255), 0.05),
-            # Text(0, 0, 'secure facility and retrieve the data ASAP.', (255, 255, 255), 0.05),
-            # Text(0, 0, '', (255, 255, 255), 0.05),
-            # Text(0, 0, 'Controls:', (128, 35, 255), 0.05),
-            # Text(0, 0, 'Arrow keys to move.', (255, 255, 255), 0.05),
-            # Text(0, 0, 'Hold down SPACE to enter aim,', (255, 255, 255), 0.05),
-            # Text(0, 0, 'use left and right arrows to adjust angle,', (255, 255, 255), 0.05),
-            # Text(0, 0, 'release SPACE to shoot.', (255, 255, 255), 0.05),
-            # Text(0, 0, '', (255, 255, 255), 0.05),
-            # Text(0, 0, 'Press SPACE to begin ', (255, 255, 255), 0.05),
+            Text(0, 0, 'The bad guys have stole the source code of the world\'s', (255, 255, 255), 0.05),
+            Text(0, 0, 'most powerful AI. You need to break into their super', (255, 255, 255), 0.05),
+            Text(0, 0, 'secure facility and retrieve the data ASAP.', (255, 255, 255), 0.05),
+            Text(0, 0, '', (255, 255, 255), 0.05),
+            Text(0, 0, 'Controls:', (128, 35, 255), 0.05),
+            Text(0, 0, 'Arrow keys to move.', (255, 255, 255), 0.05),
+            Text(0, 0, 'Hold down SPACE to enter aim,', (255, 255, 255), 0.05),
+            Text(0, 0, 'use left and right arrows to adjust angle,', (255, 255, 255), 0.05),
+            Text(0, 0, 'release SPACE to shoot.', (255, 255, 255), 0.05),
+            Text(0, 0, '', (255, 255, 255), 0.05),
+            Text(0, 0, 'Press SPACE to begin ', (255, 255, 255), 0.05),
         ]
         self.line_index = 0
         self.block_height = self.lines[0].ch * len(self.lines)

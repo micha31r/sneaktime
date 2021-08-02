@@ -9,7 +9,7 @@ import ui
 from settings import *
 
 class LevelManager:
-    def __init__(self, game, n=0):
+    def __init__(self, game, n=1):
         self.game = game
         self.lockdown = False
         self.lockdown_timer = 20

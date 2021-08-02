@@ -10,7 +10,7 @@ class Camera:
         self.scale = pg.Vector2(1, 1)
         self.vel = pg.Vector2()
         self.margin = 200
-        self.max_vel = 400
+        self.max_vel = 600
         self.friction = 0.8
         self.do_track = True
         self.multiplier = 4

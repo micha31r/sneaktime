@@ -40,6 +40,7 @@ class SplashScreen:
         if self.show_subheading:
             self.subheading.draw(screen)
 
+
 class StoryScreen:
     def __init__(self, game):
         self.game = game
@@ -91,10 +92,11 @@ class StoryScreen:
             t.pos = pg.Vector2(x, self.start_y + t.ch * i)
             t.draw(screen)
 
+
 class LevelScreen:
     def __init__(self, game):
         self.game = game
-        self.text = Text(0, 0, 'sector ' + str(self.game.level_manager.current_level), (255, 255, 255), 0.05)
+        self.text = Text(0, 0, 'Sector ' + str(self.game.level_manager.current_level), (255, 255, 255), 0.05)
         self.delay = 4
 
     def update(self, dt):
@@ -111,4 +113,71 @@ class LevelScreen:
         x, y, _, _ = self.text.text_obj.get_rect(center=center(0, 0, *self.game.window.get_size()))
         self.text.pos = pg.Vector2(x, y)
         self.text.draw(screen)
+
+
+class InterfaceManager:
+    def __init__(self, game):
+        self.game = game
+        self.items = []
+
+    def add(self, item):
+        self.items.append(item)
+
+    def message(self, text, retract=True, delay=2):
+        self.add(PopUpMessage(self.game, text, retract, delay))
+
+    def update(self, dt):
+        for i, item in reversed(list(enumerate(self.items))):
+            item.update(dt)
+            if item.is_expired():
+                del self.items[i]
+
+    def reset(self):
+        self.items = []
+
+    def draw(self, screen):
+        for item in self.items:
+            item.draw(screen)
+
+
+class PopUpMessage:
+    def __init__(self, game, text, retract=True, delay=2):
+        self.game = game
+        self.margin = 4
+        self.text = Text(0, 0, text, (255, 255, 255), 0.02)
+        self.retract = retract
+        self.retract_delay = delay
+        self.render_height = 0
+        self.transition_speed = 4
+        self.target_y = self.text.ch + self.margin * 2
+        self.complete = False
+
+    def is_expired(self):
+        return self.complete
+
+    def update(self, dt):
+        dt /= self.game.speed
+        dy = self.target_y - self.render_height
+        self.render_height += dy * self.transition_speed * dt
+        if dy < 0.01:
+            self.text.update(dt)
+            if self.retract:
+                if self.text.index == len(self.text.text):
+                    self.retract_delay -= dt
+                    if self.retract_delay < 0:
+                        self.target_y = 0
+            # Mark as complete if already retracted
+            if self.render_height < 0.01:
+                self.complete = True
+        _, wh = self.game.window.get_size()
+        self.text.pos.x = self.game.camera.pos.x + self.margin + 4
+        self.text.pos.y = self.game.camera.pos.y + wh - self.render_height + self.margin
+
+    def draw(self, screen):
+        ww, wh = self.game.window.get_size()
+        pg.draw.rect(screen, (128, 35, 255), (self.game.camera.pos.x, self.game.camera.pos.y + wh - self.render_height, ww, self.render_height + 5))
+        self.text.draw(screen)
+
+
+
 

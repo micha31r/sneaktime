@@ -83,7 +83,7 @@ class LaserTrap:
                 self.activated = False
                 self.duration_timer = self.duration
             if collide(self.collision_obj, self.game.player.collision_obj):
-                self.game.player.die()
+                self.game.player.die("Watch out for the lasers!")
         else:
             self.delay_timer -= dt
             if self.delay_timer < 0:
@@ -138,7 +138,7 @@ class NinjaStarTrap(LaserTrap):
             self.angle = 0
 
         if collide(self.collision_obj, self.game.player.collision_obj):
-            self.game.player.die()
+            self.game.player.die("Ouch, stay away from the spikes!")
 
     def draw(self, screen):
         rotated_img = pg.transform.rotate(self.img, self.angle)
@@ -197,6 +197,6 @@ class CameraTrap:
                 self.game.level_manager.lockdown = True
 
     def draw(self, screen):
-        # Draw FOV area
+        # Draw FOV area using EnemyManager's transparent surface
         pg.draw.polygon(self.game.enemy_manager.transparent_surface, (0, 0, 0, 32), self.FOV_obj.points)
 

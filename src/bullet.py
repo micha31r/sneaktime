@@ -38,7 +38,7 @@ class Bullet:
                 break
         if self.tag == "enemy" and collide(self.collision_obj, self.game.player.collision_obj):
             self.collided = True
-            self.game.player.die()
+            self.game.player.die("Try to dodge the bullets next time!")
 
     def is_dead(self):
         if self.collided or self.counter > self.lifespan:

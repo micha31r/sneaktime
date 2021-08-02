@@ -35,6 +35,19 @@ class Player:
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
         self.collision_obj = Circle(Vector(*self.c_pos), self.img_w/2)
 
+        self.has_armour = False
+        self.transparent_surface = pg.Surface(WORLD_SIZE, pg.SRCALPHA)
+        self.idle_armour_radius = self.img_w * 0.6
+        self.idle_armour_counter = 0
+        self.active_armour_radius = 0
+        self.max_active_armour_radius = self.img_w * 3
+        self.active_armour_angle = random.uniform(0, math.pi*2)
+        self.armour_is_active = False
+
+        # Interface stuff
+        self.death_message = ""
+        self.show_retry_message = True
+
     def reset(self):
         self.mode = "move"
         self.alive = True
@@ -42,15 +55,20 @@ class Player:
         self.shoot_counter = 0
         self.angle = 0
         self.inventory = inventory.InventoryManager()
+        self.show_retry_message = True
 
-    def die(self):
+    def die(self, message=None):
         if self.alive:
-            if self.inventory.has_item("armour"):
-                pass
+            if self.has_armour:
+                self.armour_is_active = True
             else:
+                if message:
+                    self.death_message = message + " Press SPACE to retry"
+                else:
+                    self.death_message = "Press SPACE to retry"
                 self.alive = False
-                self.game.particle_manager.generate(*self.c_pos, (128, 35, 255), (10, 20))
                 self.game.change_speed(0, 1)
+                self.game.particle_manager.generate(*self.c_pos, (128, 35, 255), (10, 20))
 
     def shoot(self):
         if self.can_shoot:
@@ -101,6 +119,8 @@ class Player:
             self.vel.y = 0
 
     def update(self, dt):
+        keys = pg.key.get_pressed()
+
         if self.alive:
             self.inventory.update(dt)
 
@@ -110,9 +130,6 @@ class Player:
                 if self.shoot_counter > 0.5:
                     self.can_shoot = True
                     self.shoot_counter = 0
-
-            # Set initial velocities on keypress
-            keys = pg.key.get_pressed()
 
             if self.can_shoot:
                 # Reduce the global game speed by 3/4 when in aiming mode
@@ -148,14 +165,36 @@ class Player:
                     self.angle = self.angle - math.radians(360)
         else:
             if self.game.speed < 0.01:
-                # pass
-                self.game.mode = "level"
-                self.game.speed = 1
-                self.game.target_speed = 1
-                self.game.level_screen = ui.LevelScreen(self.game)
-                self.game.camera.reset()
+                if self.show_retry_message:
+                    self.game.interface_manager.message(self.death_message, False)
+                    self.show_retry_message = False
+                if keys[pg.K_SPACE]:
+                    self.game.mode = "level"
+                    self.game.speed = 1
+                    self.game.target_speed = 1
+                    self.game.level_screen = ui.LevelScreen(self.game)
+                    self.game.camera.reset()
                 return
 
+        # Check if player has armour
+        self.has_armour = bool(self.inventory.has_item("armour"))
+
+        # Change the size of the idle armour indicator
+        if self.has_armour:
+            self.idle_armour_counter += 10 * dt
+            # Change the size of the active armour indicator
+            if self.armour_is_active:
+                diff = self.max_active_armour_radius - self.active_armour_radius
+                self.active_armour_radius += diff * 10 * dt
+                if diff < 0.01:
+                    self.armour_is_active = False
+                    self.active_armour_radius = 0
+                    self.active_armour_angle = random.uniform(0, math.pi*2)
+        else:
+            self.idle_armour_counter = 0
+            self.armour_is_active = False
+
+        # Move and track player
         self.move(dt)
         self.game.camera.track((self.pos.x, self.pos.y, self.img_w, self.img_h))
 
@@ -170,3 +209,16 @@ class Player:
             screen.blit(self.enemy_img, self.pos)
         else:
             screen.blit(self.img, self.pos)
+
+        # Draw idle armour
+        if self.has_armour:
+            change = (math.sin(self.idle_armour_counter) + 1) * 10
+            pg.draw.circle(screen, (128, 35, 255), self.c_pos, self.idle_armour_radius + change, 2)
+
+        # Draw active armour
+        if self.armour_is_active:
+            opacity = (self.max_active_armour_radius - self.active_armour_radius)
+            draw_ngon(self.transparent_surface, (128, 35, 255, opacity), 5, self.active_armour_radius, self.c_pos, self.active_armour_angle)
+            screen.blit(self.transparent_surface, (0,0))
+            self.transparent_surface.fill((255,255,255,0))
+

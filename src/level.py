@@ -34,6 +34,7 @@ class LevelManager:
         self.game.enemy_manager.reset()
         self.game.powerup_manager.reset()
         self.game.trap_manager.reset()
+        self.game.interface_manager.reset()
 
         spawners = self.current_map().spawners
 
@@ -56,6 +57,11 @@ class LevelManager:
         points = spawners["shotgun"]
         for p in points:
             self.game.powerup_manager.add(powerup.ShotgunPowerUp(self.game, p[0], p[1]))
+
+        # Armour powerups
+        points = spawners["armour"]
+        for p in points:
+            self.game.powerup_manager.add(powerup.ArmourPowerUp(self.game, p[0], p[1]))
 
         # Traps
         # Horizontal and vertical lasers
@@ -110,15 +116,18 @@ class LevelManager:
                 self.lockdown_timer = 10
                 self.lockdown_opacity_counter = 0
 
-    def draw_lockdown_filter(self, screen):
-        # Draw transparent red filter
+    def draw_filter(self, screen):
         if self.lockdown:
+            # Draw transparent red filter
             # Opacity ust be between 0 - 255
             opacity = 50 + math.sin(self.lockdown_opacity_counter * 4) * 50
-            screen.blit(self.transparent_surface, (0,0))
-            self.transparent_surface.fill((255,255,255,0))
+            # screen.blit(self.transparent_surface, (0,0))
+            # self.transparent_surface.fill((255,255,255,0))
             ww, wh = self.game.window.get_size()
             pg.draw.rect(self.transparent_surface, (255, 0, 76, opacity), (self.game.camera.pos.x-20, self.game.camera.pos.y-20, ww+40, wh+40))
+        screen.blit(self.transparent_surface, (0,0))
+        self.transparent_surface.fill((255,255,255,0))
 
     def draw(self, screen):
         self.current_map().draw(screen)
+        

@@ -78,3 +78,20 @@ class ShotgunPowerUp(DisguisePowerUp):
             v(*self.pos),
             [v(0,0), v(self.img_w,0), v(self.img_w,self.img_h), v(0,self.img_h)]
         )
+
+class ArmourPowerUp(DisguisePowerUp):
+    def __init__(self, game, x, y):
+        super().__init__(game, x, y)
+        self.name = "armour"
+        self.img = pg.image.load(rs_dir + "/powerups/armour.png").convert_alpha()
+        self.img_w, self.img_h = self.img.get_size()
+        v = Vector
+        self.collision_obj = Poly(
+            v(*self.pos),
+            [v(0,0), v(self.img_w,0), v(self.img_w,self.img_h), v(0,self.img_h)]
+        )
+
+    def draw(self, screen):
+        super().draw(screen)
+
+

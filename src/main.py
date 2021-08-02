@@ -21,7 +21,6 @@ class GameManager:
         self.screen = pg.Surface(WORLD_SIZE)
         self.clock = pg.time.Clock()
         self.mode = "splash"
-        # self.prev_mode = self.mode
         self.target_speed = 1
         self.speed = 1
         self.speed_change_constant = 4
@@ -33,6 +32,7 @@ class GameManager:
         self.particle_manager = particle.ParticleManager(self)
         self.powerup_manager = powerup.PowerUpManager(self)
         self.trap_manager = trap.TrapManager(self)
+        self.interface_manager = ui.InterfaceManager(self)
 
     def change_speed(self, speed, const=None):
         self.target_speed = speed
@@ -60,8 +60,7 @@ class GameManager:
             self.particle_manager.update(dt)
             self.powerup_manager.update(dt)
             self.trap_manager.update(dt)
-
-        # self.prev_mode = self.mode
+            self.interface_manager.update(dt)
 
     def draw(self):
         if self.mode == "splash":
@@ -79,7 +78,8 @@ class GameManager:
             self.trap_manager.draw(self.screen)
 
             # Top layers
-            self.level_manager.draw_lockdown_filter(self.screen)
+            self.level_manager.draw_filter(self.screen)
+            self.interface_manager.draw(self.screen)
 
     def event_loop(self):
         while 1:

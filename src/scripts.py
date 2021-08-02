@@ -16,7 +16,7 @@ def draw_ngon(Surface, color, n, radius, position, angle=0):
     return pg.draw.lines(Surface, color, True, [(math.cos(i / n * pi2 + angle) * radius + position[0], math.sin(i / n * pi2 + angle) * radius + position[1]) for i in range(0, n)], 2)
 
 class Text:
-    def __init__(self, x, y, text, color, interval, size=16, direction=1):
+    def __init__(self, x, y, text, color, interval, size=16, direction=1, typing_effect=True):
         self.pos = pg.Vector2(x, y)
         self.text = text
         self.color = color
@@ -25,11 +25,16 @@ class Text:
         self.direction = direction
         self.index = 0 if direction == 1 else len(self.text) - 1
         self.font = pg.font.Font(rs_dir + "/fonts/RobotoMonoMedium.ttf", size)
-        _, _, self.cw, self.ch = self.font.render("0", True, self.color).get_rect()
-        self.text_obj = self.font.render(self.text[:self.index], True, self.color)
         self.focus = True
         self.cursor = False
         self.cursor_timer = 0.5
+        
+        if not typing_effect:
+            self.index = len(self.text)
+            self.focus = False
+
+        _, _, self.cw, self.ch = self.font.render("0", True, self.color).get_rect()
+        self.text_obj = self.font.render(self.text[:self.index], True, self.color)
 
     def update(self, dt):
         typing = False

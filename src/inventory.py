@@ -1,13 +1,22 @@
 class InventoryManager:
     def __init__(self):
         self.items = []
+        self.powerups = []
 
-    def add(self, item):
+    def add_item(self, item):
         self.items.append(item)
+
+    def add_powerup(self, p):
+        self.powerups.append(p)
 
     def has_item(self, name):
         for item in self.items:
             if item.name == name:
+                return True
+
+    def has_powerup(self, name):
+        for p in self.powerups:
+            if p.name == name:
                 return True
 
     def get_item(self, name):
@@ -17,8 +26,15 @@ class InventoryManager:
                 results.append(item)
         return results
 
+    def get_powerup(self, name):
+        results = []
+        for p in self.powerups:
+            if p.name == name:
+                results.append(p)
+        return results
+
     def update(self, dt):
-        for i, item in reversed(list(enumerate(self.items))):
-            item.update(dt)
-            if item.is_expired():
-                del self.items[i]
+        for i, p in reversed(list(enumerate(self.powerups))):
+            p.update(dt)
+            if p.is_expired():
+                del self.powerups[i]

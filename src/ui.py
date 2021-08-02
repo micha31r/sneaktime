@@ -6,7 +6,7 @@ from scripts import *
 class SplashScreen:
     def __init__(self, game):
         self.game = game
-        self.heading = Text(0, 0, 'BreakIn()', (128, 35, 255), 0.05, 64)
+        self.heading = Text(0, 0, 'Break In', (128, 35, 255), 0.05, 64)
         self.subheading = Text(0, 0, 'Press SPACE to start', (255, 255, 255), 0.05)
         self.show_subheading = False
         self.delay = 2
@@ -46,16 +46,17 @@ class StoryScreen:
         self.game = game
         self.lines = [
             Text(0, 0, 'Mission:', (128, 35, 255), 0.05),
-            Text(0, 0, 'Break into the PI base and destroy their experiment,', (255, 255, 255), 0.05),
-            Text(0, 0, 'time is running out...', (255, 255, 255), 0.05),
-            Text(0, 0, '', (255, 255, 255), 0.05),
-            Text(0, 0, 'Controls:', (128, 35, 255), 0.05),
-            Text(0, 0, 'Arrow keys to move.', (255, 255, 255), 0.05),
-            Text(0, 0, 'Hold down SPACE to enter aim,', (255, 255, 255), 0.05),
-            Text(0, 0, 'use left and right arrows to adjust angle,', (255, 255, 255), 0.05),
-            Text(0, 0, 'release SPACE to shoot.', (255, 255, 255), 0.05),
-            Text(0, 0, '', (255, 255, 255), 0.05),
-            Text(0, 0, 'Press SPACE to begin ', (255, 255, 255), 0.05),
+            # Text(0, 0, 'The bad guys have stole the source code of the world\'s', (255, 255, 255), 0.05),
+            # Text(0, 0, 'most powerful AI. You need to break into their super', (255, 255, 255), 0.05),
+            # Text(0, 0, 'secure facility and retrieve the data ASAP.', (255, 255, 255), 0.05),
+            # Text(0, 0, '', (255, 255, 255), 0.05),
+            # Text(0, 0, 'Controls:', (128, 35, 255), 0.05),
+            # Text(0, 0, 'Arrow keys to move.', (255, 255, 255), 0.05),
+            # Text(0, 0, 'Hold down SPACE to enter aim,', (255, 255, 255), 0.05),
+            # Text(0, 0, 'use left and right arrows to adjust angle,', (255, 255, 255), 0.05),
+            # Text(0, 0, 'release SPACE to shoot.', (255, 255, 255), 0.05),
+            # Text(0, 0, '', (255, 255, 255), 0.05),
+            # Text(0, 0, 'Press SPACE to begin ', (255, 255, 255), 0.05),
         ]
         self.line_index = 0
         self.block_height = self.lines[0].ch * len(self.lines)
@@ -98,6 +99,8 @@ class LevelScreen:
         self.game = game
         self.text = Text(0, 0, 'Sector ' + str(self.game.level_manager.current_level), (255, 255, 255), 0.05)
         self.delay = 4
+        # Reset camera pos
+        self.game.camera.reset()
 
     def update(self, dt):
         if self.text.index == len(self.text.text):
@@ -122,9 +125,10 @@ class InterfaceManager:
 
     def add(self, item):
         self.items.append(item)
+        return self.items[-1]
 
-    def message(self, text, retract=True, delay=2):
-        self.add(PopUpMessage(self.game, text, retract, delay))
+    def message(self, text, retract=True, delay=2, typing_effect=True):
+        return self.add(PopUpMessage(self.game, text, retract, delay, typing_effect=typing_effect))
 
     def update(self, dt):
         for i, item in reversed(list(enumerate(self.items))):
@@ -141,10 +145,10 @@ class InterfaceManager:
 
 
 class PopUpMessage:
-    def __init__(self, game, text, retract=True, delay=2):
+    def __init__(self, game, text, retract=True, delay=2, typing_effect=True):
         self.game = game
         self.margin = 4
-        self.text = Text(0, 0, text, (255, 255, 255), 0.02)
+        self.text = Text(0, 0, text, (255, 255, 255), 0.02, typing_effect=typing_effect)
         self.retract = retract
         self.retract_delay = delay
         self.render_height = 0

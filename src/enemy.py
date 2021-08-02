@@ -127,7 +127,7 @@ class Enemy:
 
         detected_player = False
         
-        if not player.inventory.has_item("disguise"):
+        if not player.inventory.has_powerup("disguise"):
             if detect_outside_FOV or (collide(self.game.player.collision_obj, self.FOV_obj) or (abs(dv.x) < self.img_w and abs(dv.y) < self.img_h)):
                 detected_player = True
                 

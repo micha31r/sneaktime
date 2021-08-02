@@ -13,7 +13,7 @@ import trap
 from settings import *
 
 pg.init()
-pg.display.set_caption("BreakIn()")
+pg.display.set_caption("Break In")
 
 class GameManager:
     def __init__(self):

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.7.0" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="64" tileheight="64" infinite="1" nextlayerid="15" nextobjectid="49">
+<map version="1.5" tiledversion="1.7.0" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="64" tileheight="64" infinite="1" nextlayerid="16" nextobjectid="50">
  <editorsettings>
-  <export target="tilemap.json" format="json"/>
+  <export target="tilemap1.json" format="json"/>
  </editorsettings>
  <tileset firstgid="1" source="tileset.tsx"/>
  <layer id="1" name="Tile Layer 1" width="100" height="100">
@@ -123,7 +123,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,4,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,5,5,5,5,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -196,7 +196,7 @@
 </chunk>
   </data>
  </layer>
- <objectgroup id="11" name="Convex only 1">
+ <objectgroup id="11" name="Walls 1">
   <object id="13" x="447.888" y="64">
    <polygon points="0,0 64.572,64.1783 128.357,64.1783 192.141,-0.393732"/>
   </object>
@@ -240,7 +240,7 @@
    <polygon points="0,0 24.6148,0 35.7632,20.6411 23.9525,40.951 0,40.951 -11.1484,20.6411"/>
   </object>
  </objectgroup>
- <objectgroup id="12" name="Convex only 2">
+ <objectgroup id="12" name="Walls 2">
   <object id="28" x="320.18" y="64">
    <polygon points="0,0 -128.539,127.941 -192.307,127.746 -256.18,128.004 -256.18,-0.522084"/>
   </object>
@@ -296,6 +296,11 @@
    <polygon points="0,0 0.489812,63.6755 128.331,63.6755 127.841,-0.489812"/>
   </object>
  </objectgroup>
+ <objectgroup id="15" name="Exit">
+  <object id="49" x="639.584" y="1280.06">
+   <polygon points="0,0 0.982325,65.0494 257.666,65.811 256.904,-1.21614"/>
+  </object>
+ </objectgroup>
  <layer id="13" name="Spawners" width="100" height="100" visible="0">
   <properties>
    <property name="spawner" type="bool" value="true"/>
@@ -333,7 +338,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+44,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </chunk>

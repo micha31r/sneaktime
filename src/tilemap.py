@@ -14,6 +14,8 @@ class TiledMap:
             "disguise": 41,
             "shotgun": 42, 
             "armour": 43,
+            # Items
+            "key": 44,
             # Traps
             "laser_h": 33,
             "laser_v": 34,
@@ -35,7 +37,7 @@ class TiledMap:
         self.data = json.load(f)
 
     def load_tileset(self):
-        img = pg.image.load(rs_dir + "/tilesheet.png").convert_alpha()
+        img = pg.image.load(rs_dir + "/maps/tilesheet.png").convert_alpha()
         img_width, img_height = img.get_size()
         tile_width, tile_height = self.data["tilewidth"], self.data["tileheight"]
         self.tileset = []
@@ -60,7 +62,7 @@ class TiledMap:
                             points.append(v(p["x"], p["y"]))
                         polys.append(Poly(v(obj["x"], obj["y"]), points))
                 if polys:
-                    self.polygons[layer["name"]] = polys
+                    self.polygons[layer["name"].lower()] = polys
 
     def load_tiles(self):
         self.spawners = {}
@@ -101,14 +103,20 @@ class TiledMap:
                             tx = 0
                             ty += 1
 
-    def rect_collide(self, rect, target_layer_name=None):
+    def rect_collide(self, rect, target_layer_name=None, exclude_layer_name=None):
         x1 = rect[0]
         y1 = rect[1]
         w1 = rect[2]
         h1 = rect[3]
+        # Convert to lower case
+        if target_layer_name:
+            target_layer_name = target_layer_name.lower()
+        if exclude_layer_name:
+            exclude_layer_name = exclude_layer_name.lower()
         for layer in self.data["layers"]:
             if layer["type"] == "objectgroup":
-                if not target_layer_name or target_layer_name == layer["name"]:
+                layer_name = layer["name"].lower()
+                if (not target_layer_name or target_layer_name == layer_name) and (not exclude_layer_name or exclude_layer_name != layer_name):
                     for obj in layer["objects"]:
                         # Check for intersection
                         x2 = obj["x"]
@@ -123,12 +131,17 @@ class TiledMap:
                             (y1 > y2 and y1 + h1 < y2 + h2)):
                             return True
 
-    def poly_collide(self, p1, target_layer_name=None, capture_all=False):
+    def poly_collide(self, p1, target_layer_name=None, capture_all=False, exclude_layer_name=None):
         # Must capture all collisions for r.overlap_v to work, 
         # otherwise 'a' will tunnel into 'b' while responding collision with 'c'
         all_collisions = []
+        # Convert to lower case
+        if target_layer_name:
+            target_layer_name = target_layer_name.lower()
+        if exclude_layer_name:
+            exclude_layer_name = exclude_layer_name.lower()
         for layer_name, items in self.polygons.items():
-            if not target_layer_name or target_layer_name == layer_name:
+            if (not target_layer_name or target_layer_name == layer_name) and (not exclude_layer_name or exclude_layer_name != layer_name):
                 for p2 in items:
                     # Collision responses are only supported for convex polygons
                     r = Response()

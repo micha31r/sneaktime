@@ -5,6 +5,7 @@ import tilemap
 import enemy
 import powerup
 import trap
+import ui
 from settings import *
 
 class LevelManager:
@@ -14,15 +15,36 @@ class LevelManager:
         self.lockdown_timer = 20
         self.lockdown_opacity_counter = 0
         self.current_level = n
-        self.levels = [tilemap.TiledMap(game, "/tilemap.json")]
+        self.levels = [
+            {
+                "items": {
+                    "key": 1,
+                },
+                "map": tilemap.TiledMap(game, "/maps/tilemap1.json"),
+            },
+            {
+                "items": {
+                    "key": 1,
+                },
+                "map": tilemap.TiledMap(game, "/maps/tilemap2.json"),
+            },
+        ]
         self.transparent_surface = pg.Surface(WORLD_SIZE, pg.SRCALPHA)
 
-    def current_map(self):
+    def current_level_obj(self):
         return self.levels[self.current_level]
+
+    def current_map(self):
+        return self.levels[self.current_level]["map"]
 
     def switch(self, n):
         self.current_level = n
-        self.load_level(n)
+        self.game.mode = "level"
+        self.game.level_screen = ui.LevelScreen(self.game)
+
+    def next(self):
+        if self.current_level < len(self.levels) - 1:
+            self.switch(self.current_level + 1)
 
     def load_level(self, n=None):
         if not n:
@@ -62,6 +84,11 @@ class LevelManager:
         points = spawners["armour"]
         for p in points:
             self.game.powerup_manager.add(powerup.ArmourPowerUp(self.game, p[0], p[1]))
+
+        # Items
+        points = spawners["key"]
+        for p in points:
+            self.game.powerup_manager.add(powerup.KeyItem(self.game, p[0], p[1]))
 
         # Traps
         # Horizontal and vertical lasers

@@ -18,7 +18,12 @@ class PowerUpManager:
             # Activate item and add to player's inventory after collision
             if collide(item.collision_obj, self.game.player.collision_obj):
                 item.activated = True
-                self.game.player.inventory.add(item)
+                if item.type == "item":
+                    self.game.player.inventory.add_item(item)
+                    self.game.interface_manager.message(f"Collected {item.name}", typing_effect=False)
+                else:
+                    self.game.player.inventory.add_powerup(item)
+                    self.game.interface_manager.message(f"Applying powerup '{item.name}'", typing_effect=False)
                 self.game.particle_manager.generate(*self.game.player.c_pos, (128,35,255), (10,20))
                 del self.items[i]
 
@@ -33,6 +38,7 @@ class PowerUpManager:
 class DisguisePowerUp:
     def __init__(self, game, x, y):
         self.game = game
+        self.type = "powerup"
         self.pos = pg.Vector2(x, y)
         self.angle = 0 # in degrees
         self.name = "disguise"
@@ -93,5 +99,21 @@ class ArmourPowerUp(DisguisePowerUp):
 
     def draw(self, screen):
         super().draw(screen)
+
+
+class KeyItem(DisguisePowerUp):
+    def __init__(self, game, x, y):
+        super().__init__(game, x, y)
+        self.type = "item"
+        self.name = "key"
+        self.img = pg.image.load(rs_dir + "/items/key.png").convert_alpha()
+        self.img_w, self.img_h = self.img.get_size()
+        v = Vector
+        self.collision_obj = Poly(
+            v(*self.pos),
+            [v(0,0), v(self.img_w,0), v(self.img_w,self.img_h), v(0,self.img_h)]
+        )
+
+
 
 

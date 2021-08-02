@@ -23,6 +23,10 @@ class EnemyManager:
             if e.is_dead() == True:
                 del self.entities[i]
 
+    def reset(self):
+        self.detect_outside_FOV = False
+        self.entities = []
+
     def draw(self, screen):
         # Draw transparent surface
         screen.blit(self.transparent_surface, (0,0))

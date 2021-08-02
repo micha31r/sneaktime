@@ -36,6 +36,9 @@ class Bullet:
                 self.collided = True
                 del self.game.enemy_manager.entities[i] # Delete entity
                 break
+        if self.tag == "enemy" and collide(self.collision_obj, self.game.player.collision_obj):
+            self.collided = True
+            self.game.player.die()
 
     def is_dead(self):
         if self.collided or self.counter > self.lifespan:

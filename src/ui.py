@@ -33,6 +33,7 @@ class SplashScreen:
             keys = pg.key.get_pressed()
             if keys[pg.K_SPACE]:
                 self.game.mode = "story"
+                self.game.story_screen = StoryScreen(self.game)
 
     def draw(self, screen):
         self.heading.draw(screen)
@@ -76,6 +77,7 @@ class StoryScreen:
                 if keys[pg.K_SPACE]:
                     self.game.mode = "level"
                     self.game.speed = 1
+                    self.game.level_screen = LevelScreen(self.game)
         t.update(dt)
 
 
@@ -100,6 +102,8 @@ class LevelScreen:
             self.delay -= dt
             if self.delay < 0:
                 self.game.mode = "main"
+                self.game.level_manager.load_level() # Load level
+                self.game.camera.shake(200)
         self.text.update(dt)
 
     def draw(self, screen):

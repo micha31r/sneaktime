@@ -28,6 +28,13 @@ class LevelManager:
         if not n:
             n = self.current_level
 
+        self.reset()
+        self.game.player.reset()
+        self.game.particle_manager.reset()
+        self.game.enemy_manager.reset()
+        self.game.powerup_manager.reset()
+        self.game.trap_manager.reset()
+
         spawners = self.current_map().spawners
 
         # Set player position
@@ -85,6 +92,11 @@ class LevelManager:
         points = spawners["camera_d"]
         for p in points:
             self.game.trap_manager.add(trap.CameraTrap(self.game, p[0], p[1], "down"))
+
+    def reset(self):
+        self.lockdown = False
+        self.lockdown_timer = 20
+        self.lockdown_opacity_counter = 0
 
     def update(self, dt):
         if self.lockdown:

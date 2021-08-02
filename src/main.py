@@ -21,7 +21,7 @@ class GameManager:
         self.screen = pg.Surface(WORLD_SIZE)
         self.clock = pg.time.Clock()
         self.mode = "splash"
-        self.prev_mode = self.mode
+        # self.prev_mode = self.mode
         self.target_speed = 1
         self.speed = 1
         self.speed_change_constant = 4
@@ -48,18 +48,11 @@ class GameManager:
 
         if self.mode == "splash":
             self.splash_screen.update(dt)
-        if self.mode == "story":
-            if self.prev_mode != self.mode:
-                self.story_screen = ui.StoryScreen(self)
+        elif self.mode == "story":
             self.story_screen.update(dt)
-        if self.mode == "level":
-            if self.prev_mode != self.mode:
-                self.level_screen = ui.LevelScreen(self)
+        elif self.mode == "level":
             self.level_screen.update(dt)
-        if self.mode == "main":
-            if self.prev_mode != self.mode:
-                self.level_manager.load_level() # Load level
-                self.camera.shake(200)
+        elif self.mode == "main":
             self.camera.update(dt)
             self.level_manager.update(dt)
             self.player.update(dt)
@@ -68,16 +61,16 @@ class GameManager:
             self.powerup_manager.update(dt)
             self.trap_manager.update(dt)
 
-        self.prev_mode = self.mode
+        # self.prev_mode = self.mode
 
     def draw(self):
         if self.mode == "splash":
             self.splash_screen.draw(self.screen)
-        if self.mode == "story":
+        elif self.mode == "story":
             self.story_screen.draw(self.screen)
-        if self.mode == "level":
+        elif self.mode == "level":
             self.level_screen.draw(self.screen)
-        if self.mode == "main":
+        elif self.mode == "main":
             self.level_manager.draw(self.screen)
             self.powerup_manager.draw(self.screen)
             self.player.draw(self.screen)

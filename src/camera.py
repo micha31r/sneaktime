@@ -46,6 +46,11 @@ class Camera:
         self.vel.y = self.vel.y if self.vel.y < self.max_vel else self.max_vel
         self.vel.y = self.vel.y if self.vel.y < self.max_vel else self.max_vel
 
+    def reset(self):
+        self.pos = pg.Vector2()
+        self.shake_amount = 0
+        self.shake_displacement = pg.Vector2()
+
     def update(self, dt):
         ww, wh = self.game.window.get_size()
         self.width = ww / self.scale.x

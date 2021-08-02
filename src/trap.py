@@ -17,6 +17,9 @@ class TrapManager:
         for t in self.traps:
             t.update(dt)
 
+    def reset(self):
+        self.traps = []
+
     def draw(self, screen):
         for t in self.traps:
             t.draw(screen)
@@ -104,6 +107,7 @@ class NinjaStarTrap(LaserTrap):
         else:
             self.distance = (self.end_pos - self.pos).y
 
+        self.render_pos = self.pos.copy()
         self.angle = 0 # degrees
         self.half_cycle_time = abs(3/self.distance) * 200 # The n of seconds it takes to complete half a cycle
         self.movement_counter = 0

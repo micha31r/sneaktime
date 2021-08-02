@@ -22,6 +22,9 @@ class PowerUpManager:
                 self.game.particle_manager.generate(*self.game.player.c_pos, (128,35,255), (10,20))
                 del self.items[i]
 
+    def reset(self):
+        self.items = []
+
     def draw(self, screen):
         for item in self.items:
             item.draw(screen)

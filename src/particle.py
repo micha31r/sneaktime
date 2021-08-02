@@ -19,6 +19,9 @@ class ParticleManager:
             if p.is_dead() == True:
                 del self.particles[i]
 
+    def reset(self):
+        self.particles = []
+
     def draw(self, screen):
         for p in self.particles:
             p.draw(screen)

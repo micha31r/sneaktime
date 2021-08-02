@@ -35,6 +35,14 @@ class Player:
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
         self.collision_obj = Circle(Vector(*self.c_pos), self.img_w/2)
 
+    def reset(self):
+        self.mode = "move"
+        self.alive = True
+        self.can_shoot = False
+        self.shoot_counter = 0
+        self.angle = 0
+        self.inventory = inventory.InventoryManager()
+
     def die(self):
         if self.alive:
             if self.inventory.has_item("armour"):
@@ -93,55 +101,60 @@ class Player:
             self.vel.y = 0
 
     def update(self, dt):
-        if not self.alive:
+        if self.alive:
+            self.inventory.update(dt)
+
+            # Update shoot counter
+            if not self.can_shoot:
+                self.shoot_counter += dt
+                if self.shoot_counter > 0.5:
+                    self.can_shoot = True
+                    self.shoot_counter = 0
+
+            # Set initial velocities on keypress
+            keys = pg.key.get_pressed()
+
+            if self.can_shoot:
+                # Reduce the global game speed by 3/4 when in aiming mode
+                if keys[pg.K_SPACE]:
+                    self.game.change_speed(0.25)
+                    self.mode = "aim"
+                elif self.mode == "aim": # If key is just released and the control mode hasn't changed
+                    self.game.change_speed(1)
+                    self.shoot()
+                    self.mode = "move"
+
+            if self.mode == "move":
+                if keys[pg.K_LEFT]:
+                    self.vel.x = -self.max_vel
+                elif keys[pg.K_RIGHT]:
+                    self.vel.x = self.max_vel
+                if keys[pg.K_UP]:
+                    self.vel.y = -self.max_vel
+                elif keys[pg.K_DOWN]:
+                    self.vel.y = self.max_vel
+            elif self.mode == "aim":
+                # Aiming will not affected by the game speed unless the player is dead
+                if self.alive: aim_speed = dt / self.game.speed
+                else: aim_speed = dt
+                if keys[pg.K_LEFT]:
+                    self.angle -= 5 * aim_speed
+                elif keys[pg.K_RIGHT]:
+                    self.angle += 5 * aim_speed
+                # Limit angle
+                if self.angle < 0:
+                    self.angle = math.radians(360) + self.angle
+                if self.angle > math.radians(360):
+                    self.angle = self.angle - math.radians(360)
+        else:
             if self.game.speed < 0.01:
-                pass
-                # self.game.level_screen = ui.LevelScreen(self.game)
-                # self.game.mode = "level"
-                # self.game.speed = 1
-
-        self.inventory.update(dt)
-
-        # Update shoot counter
-        if not self.can_shoot:
-            self.shoot_counter += dt
-            if self.shoot_counter > 0.5:
-                self.can_shoot = True
-                self.shoot_counter = 0
-
-        # Set initial velocities on keypress
-        keys = pg.key.get_pressed()
-
-        if self.can_shoot:
-            # Reduce the global game speed by 3/4 when in aiming mode
-            if keys[pg.K_SPACE]:
-                self.game.change_speed(0.25)
-                self.mode = "aim"
-            elif self.mode == "aim": # If key is just released and the control mode hasn't changed
-                self.game.change_speed(1)
-                self.shoot()
-                self.mode = "move"
-
-        if self.mode == "move":
-            if keys[pg.K_LEFT]:
-                self.vel.x = -self.max_vel
-            elif keys[pg.K_RIGHT]:
-                self.vel.x = self.max_vel
-            if keys[pg.K_UP]:
-                self.vel.y = -self.max_vel
-            elif keys[pg.K_DOWN]:
-                self.vel.y = self.max_vel
-        elif self.mode == "aim":
-            # Aiming will not affected by the game speed
-            if keys[pg.K_LEFT]:
-                self.angle -= 5 * dt / self.game.speed
-            elif keys[pg.K_RIGHT]:
-                self.angle += 5 * dt / self.game.speed
-            # Limit angle
-            if self.angle < 0:
-                self.angle = math.radians(360) + self.angle
-            if self.angle > math.radians(360):
-                self.angle = self.angle - math.radians(360)
+                # pass
+                self.game.mode = "level"
+                self.game.speed = 1
+                self.game.target_speed = 1
+                self.game.level_screen = ui.LevelScreen(self.game)
+                self.game.camera.reset()
+                return
 
         self.move(dt)
         self.game.camera.track((self.pos.x, self.pos.y, self.img_w, self.img_h))

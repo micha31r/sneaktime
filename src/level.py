@@ -24,7 +24,7 @@ class LevelManager:
             },
             {
                 "items": {
-                    "key": 1,
+                    "key": 3,
                 },
                 "map": tilemap.TiledMap(game, "/maps/tilemap2.json"),
             },

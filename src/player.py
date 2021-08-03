@@ -15,10 +15,11 @@ class Player:
         self.pos = pg.Vector2(0, 0)
         self.vel = pg.Vector2()
         self.max_vel = 260
-        self.friction = 0.9
+        self.friction = 0.85
         self.mode = "move"
         self.alive = True
         self.completed_level = False
+        self.death_count = 0
 
         self.inventory = inventory.InventoryManager()
 
@@ -73,6 +74,7 @@ class Player:
                 else:
                     self.death_text = "Press SPACE to retry"
                 self.alive = False
+                self.death_count += 1
                 self.game.change_speed(0, 1)
                 self.game.particle_manager.generate(*self.c_pos, (128, 35, 255), (10, 20))
 

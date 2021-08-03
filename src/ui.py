@@ -48,7 +48,7 @@ class StoryScreen:
             Text(0, 0, 'Mission:', (128, 35, 255), 0.05),
             Text(0, 0, 'The bad guys have stole the source code of the world\'s', (255, 255, 255), 0.05),
             Text(0, 0, 'most powerful AI. You need to break into their super', (255, 255, 255), 0.05),
-            Text(0, 0, 'secure facility and retrieve the data ASAP.', (255, 255, 255), 0.05),
+            Text(0, 0, 'secure facility and erase the data ASAP.', (255, 255, 255), 0.05),
             Text(0, 0, '', (255, 255, 255), 0.05),
             Text(0, 0, 'Controls:', (128, 35, 255), 0.05),
             Text(0, 0, 'Arrow keys to move.', (255, 255, 255), 0.05),
@@ -169,9 +169,9 @@ class PopUpMessage:
                 if self.text.index == len(self.text.text):
                     self.retract_delay -= dt
                     if self.retract_delay < 0:
-                        self.target_y = 0
+                        self.target_y = -2
             # Mark as complete if already retracted
-            if self.render_height < 0.01:
+            if self.render_height < 0:
                 self.complete = True
         _, wh = self.game.window.get_size()
         self.text.pos.x = self.game.camera.pos.x + self.margin + 4

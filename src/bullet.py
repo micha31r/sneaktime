@@ -34,8 +34,9 @@ class Bullet:
         for i, e in enumerate(self.game.enemy_manager.entities):
             if self.tag == "player" and collide(self.collision_obj, e.collision_obj):
                 self.collided = True
-                del self.game.enemy_manager.entities[i] # Delete entity
+                e.on_collision_with_bullet(i)
                 break
+                
         if self.tag == "enemy" and collide(self.collision_obj, self.game.player.collision_obj):
             self.collided = True
             self.game.player.die("Try to dodge the bullets next time!")

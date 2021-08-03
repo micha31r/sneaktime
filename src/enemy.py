@@ -20,7 +20,7 @@ class EnemyManager:
     def update(self, dt):
         for i, e in reversed(list(enumerate(self.entities))):
             e.update(dt, self.detect_outside_FOV)
-            if e.is_dead() == True:
+            if e.is_dead():
                 del self.entities[i]
 
     def reset(self):
@@ -37,6 +37,61 @@ class EnemyManager:
             e.draw(screen)
 
 
+# Used as a signal so player can only complete the level after killing the boss
+class BossDeathComfirmation:
+    def __init__(self):
+        self.name = "boss_death_comfirmation"
+
+
+class Boss:
+    def __init__(self, game, x, y):
+        self.game = game
+        self.health = 20
+        self.shoot_angle = random.randint(0, 360)
+        self.shoot_timer = random.uniform(0.5, 3)
+
+        # Sprites & Animation
+        self.img = pg.image.load(rs_dir + "/characters/boss.png").convert_alpha()
+        self.img_defeated = pg.image.load(rs_dir + "/characters/boss_defeated.png").convert_alpha()
+        self.img_w, self.img_h = self.img.get_size()
+
+        self.pos = pg.Vector2(x, y)
+        self.c_pos = center(*self.pos, self.img_w, self.img_h)
+        self.collision_obj = Circle(Vector(*self.c_pos), self.img_w/2)
+        self.detection_obj = Circle(Vector(*self.c_pos), self.img_w)
+
+        self.defeated = False
+
+    def is_dead(self):
+        pass
+
+    def on_collision_with_bullet(self, i):
+        self.health -= 1
+        if self.health < 0 and not self.defeated:
+            self.defeated = True
+            self.game.interface_manager.message("Mission accomplished, the super AI has been destroyed", typing_effect=False)
+            self.game.player.inventory.add_item(BossDeathComfirmation())
+            self.game.particle_manager.generate(*self.c_pos, (255, 35, 92), (10, 20))
+
+    def shoot(self):
+        for i in range(0, 360, 60):
+            self.game.particle_manager.add(bullet.Bullet(self.game, *self.c_pos, math.radians(i+self.shoot_angle), "enemy"))
+        
+    def update(self, dt, _):
+        if not self.defeated:
+            self.shoot_timer -= dt
+            if self.shoot_timer < 0 and collide(self.detection_obj, self.game.player.collision_obj):
+                self.shoot()
+                self.shoot_timer = random.uniform(0.5, 3)
+                self.shoot_angle = random.randint(0, 360)
+
+    def draw(self, screen):
+        if self.defeated:
+            screen.blit(self.img_defeated, self.pos)
+        else:
+            screen.blit(self.img, self.pos)
+
+
 class Enemy:
     def __init__(self, game, x, y):
         self.game = game
@@ -45,6 +100,7 @@ class Enemy:
         self.max_vel = random.randint(200, 300)
         self.friction = 0.9
         self.mode = "move"
+        self.alive = True
 
         # Length from the center
         self.aim_line_length = 50
@@ -75,7 +131,10 @@ class Enemy:
         self.trigger_lockdown_timer = 5
 
     def is_dead(self):
-        pass
+        return not self.alive
+
+    def on_collision_with_bullet(self, i):
+        self.alive = False
 
     def move(self, dt):
         dx = self.vel.x * dt

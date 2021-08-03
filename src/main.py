@@ -8,7 +8,7 @@ import level
 import player
 import enemy
 import particle
-import powerup
+import item
 import trap
 from settings import *
 
@@ -30,7 +30,7 @@ class GameManager:
         self.player = player.Player(self)
         self.enemy_manager = enemy.EnemyManager(self)
         self.particle_manager = particle.ParticleManager(self)
-        self.powerup_manager = powerup.PowerUpManager(self)
+        self.item_manager = item.ItemManager(self)
         self.trap_manager = trap.TrapManager(self)
         self.interface_manager = ui.InterfaceManager(self)
 
@@ -58,9 +58,11 @@ class GameManager:
             self.player.update(dt)
             self.enemy_manager.update(dt)
             self.particle_manager.update(dt)
-            self.powerup_manager.update(dt)
+            self.item_manager.update(dt)
             self.trap_manager.update(dt)
             self.interface_manager.update(dt)
+        elif self.mode == "complete":
+            self.complete_screen.update(dt)
 
     def draw(self):
         if self.mode == "splash":
@@ -71,7 +73,7 @@ class GameManager:
             self.level_screen.draw(self.screen)
         elif self.mode == "main":
             self.level_manager.draw(self.screen)
-            self.powerup_manager.draw(self.screen)
+            self.item_manager.draw(self.screen)
             self.player.draw(self.screen)
             self.enemy_manager.draw(self.screen)
             self.particle_manager.draw(self.screen)
@@ -80,6 +82,8 @@ class GameManager:
             # Top layers
             self.level_manager.draw_filter(self.screen)
             self.interface_manager.draw(self.screen)
+        elif self.mode == "complete":
+            self.complete_screen.draw(self.screen)
 
     def event_loop(self):
         while 1:

@@ -94,12 +94,37 @@ class StoryScreen:
             t.draw(screen)
 
 
+class CompleteScreen(StoryScreen):
+    def __init__(self, game):
+        super().__init__(game)
+        self.lines = [
+            Text(0, 0, 'Congratulations, you have successfully destroyed', (255, 255, 255), 0.05),
+            Text(0, 0, 'the super AI!', (255, 255, 255), 0.05),
+            Text(0, 0, '', (128, 35, 255), 0.05),
+            Text(0, 0, 'Mission Report:', (128, 35, 255), 0.05),
+            Text(0, 0, f'Death(s): {self.game.player.death_count}', (255, 255, 255), 0.05),
+            Text(0, 0, '', (255, 255, 255), 0.05),
+            Text(0, 0, 'Thank you for playing', (255, 255, 255), 0.05),
+        ]
+        self.block_height = self.lines[0].ch * len(self.lines)
+        self.game.camera.reset()
+
+    def update(self, dt):
+        t = self.lines[self.line_index]
+        if t.index == len(t.text):
+            self.delay -= dt
+            if self.delay < 0 and self.line_index < len(self.lines)-1:
+                self.delay = 1
+                self.line_index += 1
+                t.focus = False
+        t.update(dt)
+
+
 class LevelScreen:
     def __init__(self, game):
         self.game = game
         self.text = Text(0, 0, 'Sector ' + str(self.game.level_manager.current_level), (255, 255, 255), 0.05)
         self.delay = 4
-        # Reset camera pos
         self.game.camera.reset()
 
     def update(self, dt):

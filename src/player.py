@@ -93,6 +93,16 @@ class Player:
             self.game.camera.shake(100)
             self.can_shoot = False
 
+    def boss_collide(self):
+        if self.game.level_manager.current_level == len(self.game.level_manager.levels) - 1:
+            all_collisions = []
+            for e in self.game.enemy_manager.entities:
+                if type(e).__name__ == "Boss":
+                    r = Response()
+                    if collide(self.collision_obj, e.collision_obj, r):
+                        all_collisions.append(r.overlap_v)
+            return all_collisions
+
     def move(self, dt):
         # Player collision and movement
         dx = self.vel.x * dt
@@ -105,7 +115,7 @@ class Player:
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
         self.collision_obj.pos = Vector(*self.c_pos)
 
-        all_collisions = self.game.level_manager.current_map().poly_collide(self.collision_obj, capture_all=True, exclude_layer_name="exit")
+        all_collisions = self.boss_collide() + self.game.level_manager.current_map().poly_collide(self.collision_obj, capture_all=True, exclude_layer_name="exit")
         if all_collisions:
             for c in all_collisions:
                 self.pos.x -= c.x
@@ -137,11 +147,12 @@ class Player:
             met_requirements = True
             required_items = lv_mger.current_level_obj()["items"].items()
             for k,v in required_items:
-                if len(self.inventory.get_item(k)) != v:
+                if len(self.inventory.get_item(k)) < v:
                     met_requirements = False
             if met_requirements:
                 if lv_mger.current_map().poly_collide(self.collision_obj, target_layer_name="exit"):
                     if not self.completed_level:
+                        self.game.particle_manager.generate(*self.c_pos, (128, 35, 255), (10, 20))
                         self.game.change_speed(0, 1)
                         self.completed_level = True
                     else:

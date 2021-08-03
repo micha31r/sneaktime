@@ -10,6 +10,7 @@ class TiledMap:
         self.spawner_tiles = {
             "player": 49,
             "enemy": 50, 
+            "boss": 51, 
             # Power ups
             "disguise": 41,
             "shotgun": 42, 

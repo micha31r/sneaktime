@@ -4,7 +4,7 @@ from collision import *
 from settings import *
 from scripts import *
 
-class PowerUpManager:
+class ItemManager:
     def __init__(self, game):
         self.game = game
         self.items = []
@@ -84,6 +84,7 @@ class ShotgunPowerUp(DisguisePowerUp):
             v(*self.pos),
             [v(0,0), v(self.img_w,0), v(self.img_w,self.img_h), v(0,self.img_h)]
         )
+        
 
 class ArmourPowerUp(DisguisePowerUp):
     def __init__(self, game, x, y):

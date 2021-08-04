@@ -21,6 +21,7 @@ sound_effects = {
 	"confirm": pg.mixer.Sound(rs_dir + '/sounds/confirm.ogg'),
 	"fail": pg.mixer.Sound(rs_dir + '/sounds/fail.ogg'),
 	"footstep": pg.mixer.Sound(rs_dir + '/sounds/footstep.ogg'),
+	"impact": pg.mixer.Sound(rs_dir + '/sounds/impact.ogg'),
 	"laser": pg.mixer.Sound(rs_dir + '/sounds/laser.ogg'),
 	"pickup_item": pg.mixer.Sound(rs_dir + '/sounds/pickup_item.ogg'),
 	"pickup_powerup": pg.mixer.Sound(rs_dir + '/sounds/pickup_powerup.wav'),

@@ -112,6 +112,7 @@ class NinjaStarTrap(LaserTrap):
         self.angle = 0 # degrees
         self.half_cycle_time = abs(3/self.distance) * 200 # The n of seconds it takes to complete half a cycle
         self.movement_counter = 0
+        self.play_sound = True
 
         self.img = pg.image.load(rs_dir + "/traps/ninja_star.png").convert_alpha()
         self.img_w, self.img_h = self.img.get_size()
@@ -140,6 +141,14 @@ class NinjaStarTrap(LaserTrap):
 
         if collide(self.collision_obj, self.game.player.collision_obj):
             self.game.player.die("Ouch, stay away from the spikes!")
+
+        # Play a popping sound when it reaches either end
+        if abs(self.displacement) < 0.1 or abs(self.displacement - self.distance) < 0.1:
+            if self.play_sound:
+                self.play_sound = False
+                sound_effects["impact"].play()
+        else:
+            self.play_sound = True
 
     def draw(self, screen):
         rotated_img = pg.transform.rotate(self.img, self.angle)

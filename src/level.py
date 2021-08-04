@@ -24,7 +24,7 @@ class LevelManager:
                     "key": 1,
                 },
                 "map": tilemap.TiledMap(game, "/maps/tilemap1.json"),
-                "message": "When you shoot, time slows down",
+                "message": "Objective: collect 1 star",
             },
             {
                 "items": {
@@ -32,6 +32,7 @@ class LevelManager:
                     "boss_death_comfirmation": 1, # This must be set for the last level
                 },
                 "map": tilemap.TiledMap(game, "/maps/tilemap2.json"),
+                "message": "Objective: collect 3 stars and destroy the super AI",
             },
         ]
         self.transparent_surface = pg.Surface(WORLD_SIZE, pg.SRCALPHA)
@@ -179,8 +180,8 @@ class LevelManager:
             # Draw transparent red filter
             # Opacity ust be between 0 - 255
             opacity = 50 + math.sin(self.lockdown_opacity_counter * 4) * 50
-            # screen.blit(self.transparent_surface, (0,0))
-            # self.transparent_surface.fill((255,255,255,0))
+            if opacity > 255: opacity = 255
+            elif opacity < 0: opacity = 0
             ww, wh = self.game.window.get_size()
             pg.draw.rect(self.transparent_surface, (255, 0, 76, opacity), (self.game.camera.pos.x-20, self.game.camera.pos.y-20, ww+40, wh+40))
         screen.blit(self.transparent_surface, (0,0))

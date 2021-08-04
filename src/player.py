@@ -20,12 +20,13 @@ class Player:
         self.alive = True
         self.completed_level = False
         self.sound_timer = 0.5
+        self.first_shoot = False
 
         # Game stats
         self.gameplay_timer = 0
         self.death_count = 0
 
-        self.inventory = inventory.InventoryManager()
+        self.inventory = inventory.InventoryManager(self.game)
 
         # Length from the center
         self.aim_line_length = 50
@@ -60,8 +61,9 @@ class Player:
         self.alive = True
         self.can_shoot = False
         self.shoot_counter = 0
+        self.first_shoot = False
         self.angle = 0
-        self.inventory = inventory.InventoryManager()
+        self.inventory = inventory.InventoryManager(self.game)
         self.show_retry_message = True
         self.show_success_message = True
         self.retry_message = None
@@ -207,6 +209,9 @@ class Player:
                 if self.can_shoot:
                     # Reduce the global game speed by 3/4 when in aiming mode
                     if keys[pg.K_SPACE]:
+                        if not self.first_shoot and self.game.level_manager.current_level == 0:
+                            self.first_shoot = True
+                            self.game.interface_manager.message("Time slows down when you aim", typing_effect=False)
                         self.game.change_speed(0.25)
                         self.mode = "aim"
                     elif self.mode == "aim": # If key is just released and the control mode hasn't changed
@@ -294,6 +299,8 @@ class Player:
         # Draw active armour
         if self.armour_is_active:
             opacity = (self.max_active_armour_radius - self.active_armour_radius)
+            if opacity > 255: opacity = 255
+            elif opacity < 0: opacity = 0
             draw_ngon(self.transparent_surface, (128, 35, 255, opacity), 5, self.active_armour_radius, self.c_pos, self.active_armour_angle)
             screen.blit(self.transparent_surface, (0,0))
             self.transparent_surface.fill((255,255,255,0))

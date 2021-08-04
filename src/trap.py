@@ -36,9 +36,9 @@ class LaserTrap:
         self.direction = direction
         self.activated = False
         self.delay = random.randint(1,3)
-        self.delay_timer = 0
+        self.delay_timer = self.delay
         self.duration = random.randint(1,3)
-        self.duration_timer = 0
+        self.duration_timer = self.duration
 
         self.get_end_pos()
 

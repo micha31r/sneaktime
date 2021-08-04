@@ -13,6 +13,9 @@ rs_dir = path.join(BASE_DIR, "resources")
 # Kenney Audio Assets (https://kenney.nl/assets?q=audio)
 # Shapeforms Audio Assets (https://shapeforms.itch.io/shapeforms-audio-free-sfx)
 # Mixkit Audio Assets (https://mixkit.co/)
+
+pg.mixer.set_num_channels(16)
+
 sound_effects = {
 	"aura": pg.mixer.Sound(rs_dir + '/sounds/aura.wav'),
 	"alarm": pg.mixer.Sound(rs_dir + '/sounds/alarm.wav'),

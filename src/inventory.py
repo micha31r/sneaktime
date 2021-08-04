@@ -1,13 +1,16 @@
 class InventoryManager:
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game
         self.items = []
         self.powerups = []
 
     def add_item(self, item):
-        self.items.append(item)
+        if self.game.player.alive:
+            self.items.append(item)
 
     def add_powerup(self, p):
-        self.powerups.append(p)
+        if self.game.player.alive:
+            self.powerups.append(p)
 
     def has_item(self, name):
         for item in self.items:

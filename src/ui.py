@@ -103,6 +103,7 @@ class CompleteScreen(StoryScreen):
             Text(0, 0, '', (128, 35, 255), 0.05),
             Text(0, 0, 'Mission Report:', (128, 35, 255), 0.05),
             Text(0, 0, f'Death(s): {self.game.player.death_count}', (255, 255, 255), 0.05),
+            Text(0, 0, f'Time: {round(self.game.player.gameplay_timer, 2)}s', (255, 255, 255), 0.05),
             Text(0, 0, '', (255, 255, 255), 0.05),
             Text(0, 0, 'Thank you for playing', (255, 255, 255), 0.05),
         ]

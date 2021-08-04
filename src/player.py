@@ -19,6 +19,9 @@ class Player:
         self.mode = "move"
         self.alive = True
         self.completed_level = False
+
+        # Game stats
+        self.gameplay_timer = 0
         self.death_count = 0
 
         self.inventory = inventory.InventoryManager()
@@ -94,14 +97,14 @@ class Player:
             self.can_shoot = False
 
     def boss_collide(self):
+        all_collisions = []
         if self.game.level_manager.current_level == len(self.game.level_manager.levels) - 1:
-            all_collisions = []
             for e in self.game.enemy_manager.entities:
                 if type(e).__name__ == "Boss":
                     r = Response()
                     if collide(self.collision_obj, e.collision_obj, r):
                         all_collisions.append(r.overlap_v)
-            return all_collisions
+        return all_collisions
 
     def move(self, dt):
         # Player collision and movement
@@ -140,6 +143,7 @@ class Player:
         keys = pg.key.get_pressed()
 
         if self.alive:
+            self.gameplay_timer += dt / self.game.speed
             self.inventory.update(dt)
 
             # Switch to the next level if player has collected all required items and has reached the exit

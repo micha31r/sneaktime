@@ -57,7 +57,7 @@ class StoryScreen:
             Text(0, 0, 'use left and right arrows to adjust angle,', (255, 255, 255), 0.05),
             Text(0, 0, 'release SPACE to shoot.', (255, 255, 255), 0.05),
             Text(0, 0, '', (255, 255, 255), 0.05),
-            Text(0, 0, 'Press SPACE to begin ', (255, 255, 255), 0.05),
+            Text(0, 0, 'Press SPACE to begin', (255, 255, 255), 0.05),
         ]
         self.line_index = 0
         self.block_height = self.lines[0].ch * len(self.lines)
@@ -76,7 +76,7 @@ class StoryScreen:
                 self.delay = 1
                 self.line_index += 1
                 t.focus = False
-            if self.line_index == len(self.lines)-1:
+            if self.line_index == len(self.lines)-1 and t.index == len(t.text):
                 if keys[pg.K_SPACE]:
                     sound_effects["confirm"].play()
                     self.game.mode = "level"

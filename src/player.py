@@ -19,6 +19,7 @@ class Player:
         self.mode = "move"
         self.alive = True
         self.completed_level = False
+        self.sound_timer = 0.5
 
         # Game stats
         self.gameplay_timer = 0
@@ -70,7 +71,9 @@ class Player:
     def die(self, text=None):
         if self.alive:
             if self.has_armour:
-                self.armour_is_active = True
+                if not self.armour_is_active:
+                    self.armour_is_active = True
+                    sound_effects["activate_forcefield"].play()
             else:
                 if text:
                     self.death_text = text + " Press SPACE to retry"
@@ -80,9 +83,13 @@ class Player:
                 self.death_count += 1
                 self.game.change_speed(0, 1)
                 self.game.particle_manager.generate(*self.c_pos, (128, 35, 255), (10, 20))
+                if self.game.level_manager.lockdown:
+                    sound_effects["alarm"].fadeout(1000)
+                sound_effects["splatter"].play()
 
     def shoot(self):
         if self.can_shoot:
+            sound_effects["shoot"].play()
             if self.inventory.has_powerup("shotgun"):
                 self.game.particle_manager.add(bullet.Bullet(self.game, *self.c_pos, self.angle, "player"))
                 for i in range(4):
@@ -107,6 +114,8 @@ class Player:
         return all_collisions
 
     def move(self, dt):
+        initial_pos = self.collision_obj.pos.copy()
+
         # Player collision and movement
         dx = self.vel.x * dt
         dy = self.vel.y * dt
@@ -125,7 +134,6 @@ class Player:
                 self.pos.y -= c.y
                 self.c_pos = center(*self.pos, self.img_w, self.img_h)
                 self.collision_obj.pos = Vector(*self.c_pos)
-                # pass
             self.vel.x = 0
             self.vel.y = 0
 
@@ -134,16 +142,27 @@ class Player:
         self.vel.y *= self.friction
 
         # Set velocity to 0 if too small
-        if abs(self.vel.x) < 0.05:
+        if abs(self.vel.x) < 0.1:
             self.vel.x = 0
-        if abs(self.vel.y) < 0.05:
+        if abs(self.vel.y) < 0.1:
             self.vel.y = 0
+
+        # Only increase sound timer if player has actually moved
+        if (self.collision_obj.pos - initial_pos).ln() > 2:
+            self.sound_timer -= dt
+
+        self.footstep_sound(dt)
+
+    def footstep_sound(self, dt):
+        if self.sound_timer < 0:
+            self.sound_timer = 0.5
+            sound_effects["footstep"].play()
 
     def update(self, dt):
         keys = pg.key.get_pressed()
 
         if self.alive:
-            self.gameplay_timer += dt / self.game.speed
+            self.gameplay_timer += dt / self.game.speed or 1
             self.inventory.update(dt)
 
             # Switch to the next level if player has collected all required items and has reached the exit
@@ -159,13 +178,18 @@ class Player:
                         self.game.particle_manager.generate(*self.c_pos, (128, 35, 255), (10, 20))
                         self.game.change_speed(0, 1)
                         self.completed_level = True
+                        if self.game.level_manager.lockdown:
+                            sound_effects["alarm"].fadeout(1000)
+                        sound_effects["aura"].play()
                     else:
                         if self.game.speed < 0.01:
                             if self.show_success_message:
+                                sound_effects["success"].play()
                                 self.success_message = self.game.interface_manager.message("Level complete! Press SPACE to continue", False)
                                 self.show_success_message = False
                             elif self.success_message.text.index == len(self.success_message.text.text):
                                 if keys[pg.K_SPACE]:
+                                    sound_effects["confirm"].play()
                                     self.game.speed = 1
                                     self.game.target_speed = 1
                                     lv_mger.next()
@@ -191,6 +215,7 @@ class Player:
                         self.mode = "move"
 
                 if self.mode == "move":
+                    # Set velocities
                     if keys[pg.K_LEFT]:
                         self.vel.x = -self.max_vel
                     elif keys[pg.K_RIGHT]:
@@ -201,7 +226,7 @@ class Player:
                         self.vel.y = self.max_vel
                 elif self.mode == "aim":
                     # Aiming will not affected by the game speed unless the player is dead
-                    if self.alive: aim_speed = dt / self.game.speed
+                    if self.alive: aim_speed = dt / self.game.speed or 1
                     else: aim_speed = dt
                     if keys[pg.K_LEFT]:
                         self.angle -= 5 * aim_speed
@@ -215,10 +240,12 @@ class Player:
         else:
             if self.game.speed < 0.01:
                 if self.show_retry_message:
+                    sound_effects["fail"].play()
                     self.retry_message = self.game.interface_manager.message(self.death_text, False)
                     self.show_retry_message = False
                 elif self.retry_message.text.index == len(self.retry_message.text.text):
                     if keys[pg.K_SPACE]:
+                        sound_effects["confirm"].play()
                         self.game.mode = "level"
                         self.game.speed = 1
                         self.game.target_speed = 1

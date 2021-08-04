@@ -32,6 +32,7 @@ class SplashScreen:
         if self.show_subheading and self.subheading.index == len(self.subheading.text):
             keys = pg.key.get_pressed()
             if keys[pg.K_SPACE]:
+                sound_effects["confirm"].play()
                 self.game.mode = "story"
                 self.game.story_screen = StoryScreen(self.game)
 
@@ -77,6 +78,7 @@ class StoryScreen:
                 t.focus = False
             if self.line_index == len(self.lines)-1:
                 if keys[pg.K_SPACE]:
+                    sound_effects["confirm"].play()
                     self.game.mode = "level"
                     self.game.speed = 1
                     self.game.level_screen = LevelScreen(self.game)
@@ -135,6 +137,7 @@ class LevelScreen:
                 self.game.mode = "main"
                 self.game.level_manager.load_level() # Load level
                 self.game.camera.shake(200)
+                sound_effects["start_level"].play()
         self.text.update(dt)
 
     def draw(self, screen):
@@ -154,6 +157,7 @@ class InterfaceManager:
         return self.items[-1]
 
     def message(self, text, retract=True, delay=2, typing_effect=True):
+        sound_effects["show_message"].play()
         return self.add(PopUpMessage(self.game, text, retract, delay, typing_effect=typing_effect))
 
     def update(self, dt):

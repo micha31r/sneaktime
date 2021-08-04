@@ -87,6 +87,7 @@ class LaserTrap:
         else:
             self.delay_timer -= dt
             if self.delay_timer < 0:
+                sound_effects["laser"].play()
                 self.activated = True
                 self.delay_timer = self.delay
 

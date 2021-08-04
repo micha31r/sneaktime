@@ -21,6 +21,7 @@ class EnemyManager:
         for i, e in reversed(list(enumerate(self.entities))):
             e.update(dt, self.detect_outside_FOV)
             if e.is_dead():
+                sound_effects["splatter"].play()
                 del self.entities[i]
 
     def reset(self):

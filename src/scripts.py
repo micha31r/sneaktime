@@ -42,6 +42,9 @@ class Text:
         self.timer -= dt
         if self.timer < 0:
             if (self.direction == 1 and self.index < len(self.text)) or (self.direction == -1 and self.index > 0):
+                # Only play sound for every 2 characters typed
+                if self.index % 2 == 0:
+                    sound_effects["click"].play()
                 self.index += self.direction
                 self.timer = self.interval
                 self.text_obj = self.font.render(self.text[:self.index], True, self.color)

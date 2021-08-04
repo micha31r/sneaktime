@@ -19,9 +19,11 @@ class ItemManager:
             if collide(item.collision_obj, self.game.player.collision_obj):
                 item.activated = True
                 if item.type == "item":
+                    sound_effects["pickup_item"].play()
                     self.game.player.inventory.add_item(item)
                     self.game.interface_manager.message(f"Collected {item.name}", typing_effect=False)
                 else:
+                    sound_effects["pickup_powerup"].play()
                     self.game.player.inventory.add_powerup(item)
                     self.game.interface_manager.message(f"Applying powerup '{item.name}'", typing_effect=False)
                 self.game.particle_manager.generate(*self.game.player.c_pos, (128,35,255), (10,20))

@@ -1,6 +1,8 @@
 import pygame as pg
 from collision import *
 
+from settings import *
+
 class Bullet:
     radius = 10
 
@@ -44,6 +46,7 @@ class Bullet:
     def is_dead(self):
         if self.collided or self.counter > self.lifespan:
             self.game.particle_manager.generate(*self.pos, self.colors[self.tag]);
+            sound_effects["explode"].play()
             return True
 
     def draw(self, screen):

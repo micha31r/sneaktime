@@ -14,6 +14,9 @@ class LevelManager:
         self.lockdown = False
         self.lockdown_timer = 20
         self.lockdown_opacity_counter = 0
+        self.play_lockdown_sound = False
+        self.show_message = False
+        self.show_message_timer = 2
         self.current_level = n
         self.levels = [
             {
@@ -21,6 +24,7 @@ class LevelManager:
                     "key": 1,
                 },
                 "map": tilemap.TiledMap(game, "/maps/tilemap1.json"),
+                "message": "When you shoot, time slows down",
             },
             {
                 "items": {
@@ -62,6 +66,10 @@ class LevelManager:
         self.game.item_manager.reset()
         self.game.trap_manager.reset()
         self.game.interface_manager.reset()
+
+        level_obj = self.current_level_obj()
+        if "message" in level_obj:
+            self.show_message = True
 
         spawners = self.current_map().spawners
 
@@ -139,9 +147,15 @@ class LevelManager:
         self.lockdown = False
         self.lockdown_timer = 20
         self.lockdown_opacity_counter = 0
+        self.show_message = False
+        self.show_message_timer = 2
+        self.play_lockdown_sound = False
 
     def update(self, dt):
         if self.lockdown:
+            if not self.play_lockdown_sound:
+                self.play_lockdown_sound = True
+                sound_effects["alarm"].play(-1)
             self.game.enemy_manager.detect_outside_FOV = True
             self.lockdown_timer -= dt
             self.lockdown_opacity_counter += dt
@@ -151,6 +165,14 @@ class LevelManager:
                 self.lockdown = False
                 self.lockdown_timer = 10
                 self.lockdown_opacity_counter = 0
+                self.play_lockdown_sound = False
+                sound_effects["alarm"].fadeout(1000)
+        if self.show_message:
+            self.show_message_timer -= dt
+            if self.show_message_timer < 0:
+                self.show_message = False
+                self.game.interface_manager.message(self.current_level_obj()["message"], typing_effect=False)
+
 
     def draw_filter(self, screen):
         if self.lockdown:

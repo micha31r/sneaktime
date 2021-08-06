@@ -24,7 +24,7 @@ LEVELS = [
         },
         "theme": "purple",
         "path": "/maps/tilemap2.json",
-        "message": "Objective: collect 3 stars and destroy the super AI",
+        "message": "Objective: collect 3 stars and destroy their technology",
     },
 ]
 

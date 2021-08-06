@@ -47,17 +47,17 @@ class StoryScreen:
         self.game = game
         self.lines = [
             Text(0, 0, 'Mission:', self.game.get_color("primary"), 0.05, delay=2),
-            # Text(0, 0, 'The bad guys are building somthing sinister,', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'you need to sneak into their base and destroy', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'whatever technology they are hiding', self.game.get_color("text"), 0.05),
-            # Text(0, 0, '', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'Controls:', self.game.get_color("primary"), 0.05),
-            # Text(0, 0, 'Arrow keys to move.', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'Hold down SPACE to enter aim,', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'use left and right arrows to adjust angle,', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'then release SPACE to shoot.', self.game.get_color("text"), 0.05),
-            # Text(0, 0, '', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'Press SPACE to begin', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'The bad guys are building somthing sinister,', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'you need to sneak into their base and destroy', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'whatever technology they are hiding', self.game.get_color("text"), 0.05),
+            Text(0, 0, '', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'Controls:', self.game.get_color("primary"), 0.05),
+            Text(0, 0, 'Arrow keys to move.', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'Hold down SPACE to enter aim,', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'use left and right arrows to adjust angle,', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'then release SPACE to shoot.', self.game.get_color("text"), 0.05),
+            Text(0, 0, '', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'Press SPACE to begin', self.game.get_color("text"), 0.05),
         ]
         self.line_index = 0
         self.block_height = self.lines[0].ch * len(self.lines)

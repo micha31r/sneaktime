@@ -78,7 +78,7 @@ class Boss:
         self.shoot_angle = random.randint(0, 360)
         if self.health < 0 and not self.defeated:
             self.defeated = True
-            self.game.interface_manager.message("Mission accomplished, the super AI has been destroyed", typing_effect=False)
+            self.game.interface_manager.message("Mission accomplished, the technology has been destroyed", typing_effect=False)
             self.game.player.inventory.add_item(BossDeathComfirmation())
             self.game.particle_manager.generate(*self.c_pos, self.game.get_color("third"), (10, 20))
 

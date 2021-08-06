@@ -8,6 +8,26 @@ import trap
 import ui
 from settings import *
 
+LEVELS = [
+    {
+        "items": {
+            "key": 1,
+        },
+        "theme": "green",
+        "path": "/maps/tilemap1.json",
+        "message": "Objective: collect 1 star",
+    },
+    {
+        "items": {
+            "key": 3,
+            "boss_death_comfirmation": 1, # This must be set for the last level
+        },
+        "theme": "purple",
+        "path": "/maps/tilemap2.json",
+        "message": "Objective: collect 3 stars and destroy the super AI",
+    },
+]
+
 class LevelManager:
     def __init__(self, game, n=0):
         self.game = game
@@ -18,33 +38,23 @@ class LevelManager:
         self.show_message = False
         self.show_message_timer = 2
         self.current_level = n
-        self.levels = [
-            {
-                "items": {
-                    "key": 1,
-                },
-                "map": tilemap.TiledMap(game, "/maps/tilemap1.json"),
-                "message": "Objective: collect 1 star",
-            },
-            {
-                "items": {
-                    "key": 3,
-                    "boss_death_comfirmation": 1, # This must be set for the last level
-                },
-                "map": tilemap.TiledMap(game, "/maps/tilemap2.json"),
-                "message": "Objective: collect 3 stars and destroy the super AI",
-            },
-        ]
+        self.levels = LEVELS
         self.transparent_surface = pg.Surface(WORLD_SIZE, pg.SRCALPHA)
 
     def current_level_obj(self):
         return self.levels[self.current_level]
 
     def current_map(self):
-        return self.levels[self.current_level]["map"]
+        return self.map
 
     def switch(self, n):
         self.current_level = n
+        # Set theme
+        level_obj = self.current_level_obj()
+        if self.game.current_theme != level_obj["theme"]:
+            self.game.current_theme = level_obj["theme"]
+            self.game.player.load_sprite()
+        # Show level screen
         self.game.mode = "level"
         self.game.level_screen = ui.LevelScreen(self.game)
 
@@ -60,6 +70,12 @@ class LevelManager:
         if not n:
             n = self.current_level
 
+        level_obj = self.current_level_obj()
+
+        # Load map
+        self.map = tilemap.TiledMap(self.game, level_obj["path"])
+
+        # Reset variables and game components
         self.reset()
         self.game.player.reset()
         self.game.particle_manager.reset()
@@ -68,7 +84,6 @@ class LevelManager:
         self.game.trap_manager.reset()
         self.game.interface_manager.reset()
 
-        level_obj = self.current_level_obj()
         if "message" in level_obj:
             self.show_message = True
 
@@ -157,6 +172,7 @@ class LevelManager:
             if not self.play_lockdown_sound:
                 self.play_lockdown_sound = True
                 sound_effects["alarm"].play(-1)
+                self.game.player.lockdown_count_change += 1
             self.game.enemy_manager.detect_outside_FOV = True
             self.lockdown_timer -= dt
             self.lockdown_opacity_counter += dt
@@ -184,8 +200,8 @@ class LevelManager:
             elif opacity < 0: opacity = 0
             ww, wh = self.game.window.get_size()
             pg.draw.rect(self.transparent_surface, (255, 0, 76, opacity), (self.game.camera.pos.x-20, self.game.camera.pos.y-20, ww+40, wh+40))
-        screen.blit(self.transparent_surface, (0,0))
-        self.transparent_surface.fill((255,255,255,0))
+        screen.blit(self.transparent_surface, (0, 0))
+        self.transparent_surface.fill((0, 0, 0, 0))
 
     def draw(self, screen):
         self.current_map().draw(screen)

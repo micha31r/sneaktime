@@ -1,6 +1,5 @@
-import sys, json, math, random
+import sys, json, math, random, os
 import pygame as pg
-from os import path
 
 import camera
 import ui
@@ -10,10 +9,11 @@ import enemy
 import particle
 import item
 import trap
+import theme
 from settings import *
 
 pg.init()
-pg.display.set_caption("Break In")
+pg.display.set_caption("sneaktime")
 
 class GameManager:
     def __init__(self):
@@ -24,6 +24,9 @@ class GameManager:
         self.target_speed = 1
         self.speed = 1
         self.speed_change_constant = 4
+        self.current_theme = "green"
+
+        # Game components
         self.camera = camera.Camera(self)
         self.splash_screen = ui.SplashScreen(self)
         self.level_manager = level.LevelManager(self)
@@ -33,6 +36,15 @@ class GameManager:
         self.item_manager = item.ItemManager(self)
         self.trap_manager = trap.TrapManager(self)
         self.interface_manager = ui.InterfaceManager(self)
+
+    def get_themed_path(self, folder, file):
+        return os.path.join(*[rs_dir, folder, self.current_theme, file])
+
+    def get_theme(self):
+        return theme.THEMES[self.current_theme]
+
+    def get_color(self, key):
+        return theme.THEMES[self.current_theme][key]
 
     def change_speed(self, speed, const=None):
         self.target_speed = speed
@@ -106,9 +118,9 @@ class GameManager:
 
             self.update(dt)
 
-            self.screen.fill(BG_COLOR)
+            self.screen.fill(self.get_color("background"))
             self.draw()
-            self.window.fill(BG_COLOR)
+            self.window.fill(self.get_color("background"))
             # Render main surface after scaling it by the scale factor
             sw, sh = self.screen.get_size()
             self.window.blit(

@@ -22,6 +22,7 @@ class EnemyManager:
             e.update(dt, self.detect_outside_FOV)
             if e.is_dead():
                 sound_effects["splatter"].play()
+                self.game.player.kill_count_change += 1
                 del self.entities[i]
 
     def reset(self):
@@ -31,7 +32,7 @@ class EnemyManager:
     def draw(self, screen):
         # Draw transparent surface
         screen.blit(self.transparent_surface, (0,0))
-        self.transparent_surface.fill((255,255,255,0))
+        self.transparent_surface.fill((0, 0, 0, 0))
 
         # Draw enemies
         for e in self.entities:
@@ -52,8 +53,7 @@ class Boss:
         self.shoot_timer = random.uniform(0.5, 3)
 
         # Sprites & Animation
-        self.img = pg.image.load(rs_dir + "/characters/boss.png").convert_alpha()
-        self.img_defeated = pg.image.load(rs_dir + "/characters/boss_defeated.png").convert_alpha()
+        self.load_sprite()
         self.img_w, self.img_h = self.img.get_size()
 
         self.pos = pg.Vector2(x, y)
@@ -63,16 +63,24 @@ class Boss:
 
         self.defeated = False
 
+    def load_sprite(self):
+        self.img = pg.image.load(self.game.get_themed_path("characters", "boss.png")).convert_alpha()
+        self.img_defeated = pg.image.load(self.game.get_themed_path("characters", "boss_defeated.png")).convert_alpha()
+
     def is_dead(self):
         pass
 
     def on_collision_with_bullet(self, i):
         self.health -= 1
+        # Shoot back immediately
+        self.shoot()
+        self.shoot_timer = random.uniform(0.5, 3)
+        self.shoot_angle = random.randint(0, 360)
         if self.health < 0 and not self.defeated:
             self.defeated = True
             self.game.interface_manager.message("Mission accomplished, the super AI has been destroyed", typing_effect=False)
             self.game.player.inventory.add_item(BossDeathComfirmation())
-            self.game.particle_manager.generate(*self.c_pos, (255, 35, 92), (10, 20))
+            self.game.particle_manager.generate(*self.c_pos, self.game.get_color("third"), (10, 20))
 
     def shoot(self):
         for i in range(0, 360, 60):
@@ -110,8 +118,7 @@ class Enemy:
         self.angle = 0
 
         # Sprites & Animation
-        self.img_path = "/characters/enemy.png"
-        self.img = pg.image.load(rs_dir + self.img_path).convert_alpha()
+        self.load_sprite()
         self.img_w, self.img_h = self.img.get_size()
 
         # Field of view
@@ -130,6 +137,9 @@ class Enemy:
         self.turn_delay_timer = random.uniform(0.5,2)
 
         self.trigger_lockdown_timer = 5
+
+    def load_sprite(self):
+        self.img = pg.image.load(self.game.get_themed_path("characters", "enemy.png")).convert_alpha()
 
     def is_dead(self):
         return not self.alive
@@ -276,10 +286,10 @@ class Enemy:
         if self.mode == "aim":
             # Draw aiming lines
             end_pos = pg.Vector2(self.c_pos.x + math.cos(self.angle)*self.aim_line_length, self.c_pos.y + math.sin(self.angle)*self.aim_line_length)
-            pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
+            pg.draw.circle(screen, self.game.get_color("primary"), end_pos, 5)
 
         # Draw FOV area
-        pg.draw.polygon(self.game.enemy_manager.transparent_surface, (0, 0, 0, 32), self.FOV_obj.points)
+        pg.draw.polygon(self.game.enemy_manager.transparent_surface, (*self.game.get_color("background"), 32), self.FOV_obj.points)
 
         # Draw self
         screen.blit(self.img, self.pos)

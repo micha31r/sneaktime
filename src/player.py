@@ -25,6 +25,14 @@ class Player:
         # Game stats
         self.gameplay_timer = 0
         self.death_count = 0
+        self.kill_count = 0
+        self.kill_count_change = 0
+        self.lockdown_count = 0
+        self.lockdown_count_change = 0
+        self.powerup_count = 0
+        self.powerup_count_change = 0
+        self.bullet_count = 0
+        self.bullet_count_change = 0
 
         self.inventory = inventory.InventoryManager(self.game)
 
@@ -35,9 +43,8 @@ class Player:
         self.angle = 0
 
         # Sprites & Animation
-        self.img = pg.image.load(rs_dir + "/characters/player.png").convert_alpha()
+        self.load_sprite()
         self.img_w, self.img_h = self.img.get_size()
-        self.enemy_img = pg.image.load(rs_dir + "/characters/enemy.png").convert_alpha()
 
         self.c_pos = center(*self.pos, self.img_w, self.img_h)
         self.collision_obj = Circle(Vector(*self.c_pos), self.img_w/2)
@@ -56,6 +63,10 @@ class Player:
         self.show_retry_message = True
         self.show_success_message = True
 
+    def load_sprite(self):
+        self.img = pg.image.load(self.game.get_themed_path("characters", "player.png")).convert_alpha()
+        self.enemy_img = pg.image.load(self.game.get_themed_path("characters", "enemy.png")).convert_alpha()
+
     def reset(self):
         self.mode = "move"
         self.alive = True
@@ -69,6 +80,10 @@ class Player:
         self.retry_message = None
         self.success_message = None
         self.completed_level = False
+        self.kill_count_change = 0
+        self.lockdown_count_change = 0
+        self.powerup_count_change = 0
+        self.bullet_count_change = 0
 
     def die(self, text=None):
         if self.alive:
@@ -84,7 +99,7 @@ class Player:
                 self.alive = False
                 self.death_count += 1
                 self.game.change_speed(0, 1)
-                self.game.particle_manager.generate(*self.c_pos, (128, 35, 255), (10, 20))
+                self.game.particle_manager.generate(*self.c_pos, self.game.get_color("primary"), (10, 20))
                 if self.game.level_manager.lockdown:
                     sound_effects["alarm"].fadeout(1000)
                 sound_effects["splatter"].play()
@@ -177,12 +192,17 @@ class Player:
             if met_requirements:
                 if lv_mger.current_map().poly_collide(self.collision_obj, target_layer_name="exit"):
                     if not self.completed_level:
-                        self.game.particle_manager.generate(*self.c_pos, (128, 35, 255), (10, 20))
+                        self.game.particle_manager.generate(*self.c_pos, self.game.get_color("primary"), (10, 20))
                         self.game.change_speed(0, 1)
                         self.completed_level = True
                         if self.game.level_manager.lockdown:
                             sound_effects["alarm"].fadeout(1000)
                         sound_effects["aura"].play()
+                        # Update stats
+                        self.kill_count += self.kill_count_change
+                        self.lockdown_count += self.lockdown_count_change
+                        self.powerup_count += self.powerup_count_change
+                        self.bullet_count += self.bullet_count_change
                     else:
                         if self.game.speed < 0.01:
                             if self.show_success_message:
@@ -212,6 +232,7 @@ class Player:
                         if not self.first_shoot and self.game.level_manager.current_level == 0:
                             self.first_shoot = True
                             self.game.interface_manager.message("Time slows down when you aim", typing_effect=False)
+                        self.bullet_count_change += 1
                         self.game.change_speed(0.25)
                         self.mode = "aim"
                     elif self.mode == "aim": # If key is just released and the control mode hasn't changed
@@ -283,7 +304,7 @@ class Player:
         if self.mode == "aim":
             # Draw aiming lines
             end_pos = pg.Vector2(self.c_pos.x + math.cos(self.angle)*self.aim_line_length, self.c_pos.y + math.sin(self.angle)*self.aim_line_length)
-            pg.draw.circle(screen, (128, 35, 255), end_pos, 5)
+            pg.draw.circle(screen, self.game.get_color("primary"), end_pos, 5)
 
         # Draw self
         if self.inventory.has_powerup("disguise"):
@@ -294,14 +315,14 @@ class Player:
         # Draw idle armour
         if self.has_armour:
             change = (math.sin(self.idle_armour_counter) + 1) * 10
-            pg.draw.circle(screen, (128, 35, 255), self.c_pos, self.idle_armour_radius + change, 2)
+            pg.draw.circle(screen, self.game.get_color("primary"), self.c_pos, self.idle_armour_radius + change, 2)
 
         # Draw active armour
         if self.armour_is_active:
             opacity = (self.max_active_armour_radius - self.active_armour_radius)
             if opacity > 255: opacity = 255
             elif opacity < 0: opacity = 0
-            draw_ngon(self.transparent_surface, (128, 35, 255, opacity), 5, self.active_armour_radius, self.c_pos, self.active_armour_angle)
-            screen.blit(self.transparent_surface, (0,0))
-            self.transparent_surface.fill((255,255,255,0))
+            draw_ngon(self.transparent_surface, (*self.game.get_color("primary"), opacity), 5, self.active_armour_radius, self.c_pos, self.active_armour_angle)
+            screen.blit(self.transparent_surface, (0, 0))
+            self.transparent_surface.fill((0, 0, 0, 0))
 

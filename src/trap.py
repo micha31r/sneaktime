@@ -93,7 +93,7 @@ class LaserTrap:
 
     def draw(self, screen):
         if self.activated:
-            pg.draw.line(screen, (0,0,0), self.pos, self.end_pos, 3)
+            pg.draw.line(screen, self.game.get_color("background"), self.pos, self.end_pos, 3)
 
 
 class NinjaStarTrap(LaserTrap):
@@ -114,11 +114,14 @@ class NinjaStarTrap(LaserTrap):
         self.movement_counter = 0
         self.play_sound = True
 
-        self.img = pg.image.load(rs_dir + "/traps/ninja_star.png").convert_alpha()
+        self.load_sprite()
         self.img_w, self.img_h = self.img.get_size()
 
         v = Vector
         self.collision_obj = Circle(v(*self.pos), self.img_w/2)
+
+    def load_sprite(self):
+        self.img = pg.image.load(self.game.get_themed_path("traps", "ninja_star.png")).convert_alpha()
 
     def update(self, dt):
         # Calculate displacement based on sin(movement_counter)
@@ -208,5 +211,5 @@ class CameraTrap:
 
     def draw(self, screen):
         # Draw FOV area using EnemyManager's transparent surface
-        pg.draw.polygon(self.game.enemy_manager.transparent_surface, (0, 0, 0, 32), self.FOV_obj.points)
+        pg.draw.polygon(self.game.enemy_manager.transparent_surface, (*self.game.get_color("background"), 32), self.FOV_obj.points)
 

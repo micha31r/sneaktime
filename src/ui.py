@@ -6,8 +6,8 @@ from scripts import *
 class SplashScreen:
     def __init__(self, game):
         self.game = game
-        self.heading = Text(0, 0, 'Break In', (128, 35, 255), 0.05, 64, delay=2)
-        self.subheading = Text(0, 0, 'Press SPACE to start', (255, 255, 255), 0.05)
+        self.heading = Text(0, 0, 'sneaktime', self.game.get_color("primary"), 0.05, 64, delay=2)
+        self.subheading = Text(0, 0, 'Press SPACE to start', self.game.get_color("text"), 0.05)
         self.show_subheading = False
         self.delay = 2
 
@@ -46,18 +46,18 @@ class StoryScreen:
     def __init__(self, game):
         self.game = game
         self.lines = [
-            Text(0, 0, 'Mission:', (128, 35, 255), 0.05, delay=2),
-            Text(0, 0, 'The bad guys have stole the source code of the world\'s', (255, 255, 255), 0.05),
-            Text(0, 0, 'most powerful AI. You need to break into their super', (255, 255, 255), 0.05),
-            Text(0, 0, 'secure facility and erase the data ASAP.', (255, 255, 255), 0.05),
-            Text(0, 0, '', (255, 255, 255), 0.05),
-            Text(0, 0, 'Controls:', (128, 35, 255), 0.05),
-            Text(0, 0, 'Arrow keys to move.', (255, 255, 255), 0.05),
-            Text(0, 0, 'Hold down SPACE to enter aim,', (255, 255, 255), 0.05),
-            Text(0, 0, 'use left and right arrows to adjust angle,', (255, 255, 255), 0.05),
-            Text(0, 0, 'release SPACE to shoot.', (255, 255, 255), 0.05),
-            Text(0, 0, '', (255, 255, 255), 0.05),
-            Text(0, 0, 'Press SPACE to begin', (255, 255, 255), 0.05),
+            Text(0, 0, 'Mission:', self.game.get_color("primary"), 0.05, delay=2),
+            # Text(0, 0, 'The bad guys are building somthing sinister,', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'you need to sneak into their base and destroy', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'whatever technology they are hiding', self.game.get_color("text"), 0.05),
+            # Text(0, 0, '', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'Controls:', self.game.get_color("primary"), 0.05),
+            # Text(0, 0, 'Arrow keys to move.', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'Hold down SPACE to enter aim,', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'use left and right arrows to adjust angle,', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'then release SPACE to shoot.', self.game.get_color("text"), 0.05),
+            # Text(0, 0, '', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'Press SPACE to begin', self.game.get_color("text"), 0.05),
         ]
         self.line_index = 0
         self.block_height = self.lines[0].ch * len(self.lines)
@@ -72,16 +72,16 @@ class StoryScreen:
         t = self.lines[self.line_index]
         if t.index == len(t.text):
             self.delay -= dt
-            if self.delay < 0 and self.line_index < len(self.lines)-1:
-                self.delay = 1
-                self.line_index += 1
-                t.focus = False
-            if self.line_index == len(self.lines)-1 and t.index == len(t.text):
+            if self.line_index == len(self.lines)-1:
                 if keys[pg.K_SPACE]:
                     sound_effects["confirm"].play()
                     self.game.mode = "level"
                     self.game.speed = 1
                     self.game.level_screen = LevelScreen(self.game)
+            if self.delay < 0 and self.line_index < len(self.lines)-1:
+                self.delay = 1
+                self.line_index += 1
+                t.focus = False
         t.update(dt)
 
 
@@ -100,14 +100,18 @@ class CompleteScreen(StoryScreen):
     def __init__(self, game):
         super().__init__(game)
         self.lines = [
-            Text(0, 0, 'Congratulations, you have successfully destroyed', (255, 255, 255), 0.05, delay=2),
-            Text(0, 0, 'the super AI!', (255, 255, 255), 0.05),
-            Text(0, 0, '', (128, 35, 255), 0.05),
-            Text(0, 0, 'Mission Report:', (128, 35, 255), 0.05),
-            Text(0, 0, f'Death(s): {self.game.player.death_count}', (255, 255, 255), 0.05),
-            Text(0, 0, f'Time: {round(self.game.player.gameplay_timer, 2)}s', (255, 255, 255), 0.05),
-            Text(0, 0, '', (255, 255, 255), 0.05),
-            Text(0, 0, 'Thank you for playing', (255, 255, 255), 0.05),
+            Text(0, 0, 'Congratulations, you have completed your mission', self.game.get_color("text"), 0.05, delay=2),
+            Text(0, 0, 'and destroyed the bad guys\' technology!', self.game.get_color("text"), 0.05),
+            Text(0, 0, '', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'Mission Report:', self.game.get_color("primary"), 0.05),
+            Text(0, 0, f'Time: {round(self.game.player.gameplay_timer, 2)}s', self.game.get_color("text"), 0.05),
+            Text(0, 0, f'Death Count: {self.game.player.death_count}', self.game.get_color("text"), 0.05),
+            Text(0, 0, f'Enemy killed: {self.game.player.kill_count}', self.game.get_color("text"), 0.05),
+            Text(0, 0, f'Lockdown Triggered: {self.game.player.lockdown_count}', self.game.get_color("text"), 0.05),
+            Text(0, 0, f'Powerup Used: {self.game.player.powerup_count}', self.game.get_color("text"), 0.05),
+            Text(0, 0, f'Bullet Used: {self.game.player.bullet_count}', self.game.get_color("text"), 0.05),
+            Text(0, 0, '', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'Thank you for playing', self.game.get_color("text"), 0.05),
         ]
         self.block_height = self.lines[0].ch * len(self.lines)
         self.game.camera.reset()
@@ -126,7 +130,7 @@ class CompleteScreen(StoryScreen):
 class LevelScreen:
     def __init__(self, game):
         self.game = game
-        self.text = Text(0, 0, 'Sector ' + str(self.game.level_manager.current_level), (255, 255, 255), 0.05, delay=2)
+        self.text = Text(0, 0, 'Sector ' + str(self.game.level_manager.current_level), self.game.get_color("text"), 0.05, delay=2)
         self.delay = 4
         self.game.camera.reset()
 
@@ -178,7 +182,7 @@ class PopUpMessage:
     def __init__(self, game, text, retract=True, delay=2, typing_effect=True):
         self.game = game
         self.margin = 4
-        self.text = Text(0, 0, text, (255, 255, 255), 0.02, typing_effect=typing_effect)
+        self.text = Text(0, 0, text, self.game.get_color("text"), 0.02, typing_effect=typing_effect)
         self.retract = retract
         self.retract_delay = delay
         self.render_height = 0
@@ -209,7 +213,7 @@ class PopUpMessage:
 
     def draw(self, screen):
         ww, wh = self.game.window.get_size()
-        pg.draw.rect(screen, (128, 35, 255), (self.game.camera.pos.x, self.game.camera.pos.y + wh - self.render_height, ww, self.render_height + 5))
+        pg.draw.rect(screen, self.game.get_color("primary"), (self.game.camera.pos.x, self.game.camera.pos.y + wh - self.render_height, ww, self.render_height + 5))
         self.text.draw(screen)
 
 

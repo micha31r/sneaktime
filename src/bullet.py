@@ -16,8 +16,8 @@ class Bullet:
         self.collided = False
         self.tag = tag
         self.colors = {
-            "player": (128, 35, 255),
-            "enemy": (0, 0, 0),
+            "player": self.game.get_color("primary"),
+            "enemy": self.game.get_color("secondary"),
         }
         self.collision_obj = Circle(Vector(*self.pos), self.radius)
 

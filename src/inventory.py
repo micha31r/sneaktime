@@ -11,6 +11,7 @@ class InventoryManager:
     def add_powerup(self, p):
         if self.game.player.alive:
             self.powerups.append(p)
+            self.game.player.powerup_count_change += 1
 
     def has_item(self, name):
         for item in self.items:

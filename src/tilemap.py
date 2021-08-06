@@ -38,7 +38,7 @@ class TiledMap:
         self.data = json.load(f)
 
     def load_tileset(self):
-        img = pg.image.load(rs_dir + "/maps/tilesheet.png").convert_alpha()
+        img = pg.image.load(self.game.get_themed_path("maps", "tilesheet.png")).convert_alpha()
         img_width, img_height = img.get_size()
         tile_width, tile_height = self.data["tilewidth"], self.data["tileheight"]
         self.tileset = []

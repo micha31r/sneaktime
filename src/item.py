@@ -22,11 +22,13 @@ class ItemManager:
                     sound_effects["pickup_item"].play()
                     self.game.player.inventory.add_item(item)
                     self.game.interface_manager.message(f"Collected {item.name}", typing_effect=False)
+                    color = self.game.get_color("third")
                 else:
                     sound_effects["pickup_powerup"].play()
                     self.game.player.inventory.add_powerup(item)
                     self.game.interface_manager.message(f"Applying powerup '{item.name}'", typing_effect=False)
-                self.game.particle_manager.generate(*self.game.player.c_pos, (128,35,255), (10,20))
+                    color = self.game.get_color("primary")
+                self.game.particle_manager.generate(*self.game.player.c_pos, color, (10,20))
                 del self.items[i]
 
     def reset(self):
@@ -47,7 +49,7 @@ class DisguisePowerUp:
         self.timer = 10
         self.activated = False
 
-        self.img = pg.image.load(rs_dir + "/powerups/disguise.png").convert_alpha()
+        self.load_sprite()
         self.img_w, self.img_h = self.img.get_size()
 
         v = Vector
@@ -56,9 +58,12 @@ class DisguisePowerUp:
             [v(0,0), v(self.img_w,0), v(self.img_w,self.img_h), v(0,self.img_h)]
         )
 
+    def load_sprite(self):
+        self.img = pg.image.load(self.game.get_themed_path("powerups", "disguise.png")).convert_alpha()
+
     def is_expired(self):
         if self.timer < 0:
-            self.game.particle_manager.generate(*self.game.player.c_pos, (128,35,255), (10,20))
+            self.game.particle_manager.generate(*self.game.player.c_pos, self.game.get_color("primary"), (10,20))
             return True
 
     def update(self, dt):
@@ -81,7 +86,7 @@ class DisguisePowerUp:
         pos.x += iw + gap
         pos.y += ih/2
         rect = (pos.x, pos.y - 2, line_width * self.timer / 10, 4)
-        pg.draw.rect(screen, (128, 35, 255), rect,
+        pg.draw.rect(screen, self.game.get_color("primary"), rect,
             border_top_left_radius=5,
             border_top_right_radius=5,
             border_bottom_left_radius=5,
@@ -98,26 +103,30 @@ class ShotgunPowerUp(DisguisePowerUp):
     def __init__(self, game, x, y):
         super().__init__(game, x, y)
         self.name = "shotgun"
-        self.img = pg.image.load(rs_dir + "/powerups/shotgun.png").convert_alpha()
         self.img_w, self.img_h = self.img.get_size()
         v = Vector
         self.collision_obj = Poly(
             v(*self.pos),
             [v(0,0), v(self.img_w,0), v(self.img_w,self.img_h), v(0,self.img_h)]
         )
+
+    def load_sprite(self):
+        self.img = pg.image.load(self.game.get_themed_path("powerups", "shotgun.png")).convert_alpha()
         
 
 class ArmourPowerUp(DisguisePowerUp):
     def __init__(self, game, x, y):
         super().__init__(game, x, y)
         self.name = "armour"
-        self.img = pg.image.load(rs_dir + "/powerups/armour.png").convert_alpha()
         self.img_w, self.img_h = self.img.get_size()
         v = Vector
         self.collision_obj = Poly(
             v(*self.pos),
             [v(0,0), v(self.img_w,0), v(self.img_w,self.img_h), v(0,self.img_h)]
         )
+
+    def load_sprite(self):
+        self.img = pg.image.load(self.game.get_themed_path("powerups", "armour.png")).convert_alpha()
 
     def draw(self, screen):
         super().draw(screen)
@@ -128,13 +137,16 @@ class KeyItem(DisguisePowerUp):
         super().__init__(game, x, y)
         self.type = "item"
         self.name = "key"
-        self.img = pg.image.load(rs_dir + "/items/key.png").convert_alpha()
         self.img_w, self.img_h = self.img.get_size()
         v = Vector
         self.collision_obj = Poly(
             v(*self.pos),
             [v(0,0), v(self.img_w,0), v(self.img_w,self.img_h), v(0,self.img_h)]
         )
+
+    def load_sprite(self):
+        self.img = pg.image.load(self.game.get_themed_path("items", "key.png")).convert_alpha()
+
 
 
 

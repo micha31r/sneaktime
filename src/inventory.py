@@ -41,3 +41,7 @@ class InventoryManager:
             p.update(dt)
             if p.is_expired():
                 del self.powerups[i]
+
+    def draw(self, screen):
+        for i, p in enumerate(self.powerups):
+            p.draw_status(screen, i)

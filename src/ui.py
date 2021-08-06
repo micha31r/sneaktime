@@ -6,7 +6,7 @@ from scripts import *
 class SplashScreen:
     def __init__(self, game):
         self.game = game
-        self.heading = Text(0, 0, 'Break In', (128, 35, 255), 0.05, 64)
+        self.heading = Text(0, 0, 'Break In', (128, 35, 255), 0.05, 64, delay=2)
         self.subheading = Text(0, 0, 'Press SPACE to start', (255, 255, 255), 0.05)
         self.show_subheading = False
         self.delay = 2
@@ -46,7 +46,7 @@ class StoryScreen:
     def __init__(self, game):
         self.game = game
         self.lines = [
-            Text(0, 0, 'Mission:', (128, 35, 255), 0.05),
+            Text(0, 0, 'Mission:', (128, 35, 255), 0.05, delay=2),
             Text(0, 0, 'The bad guys have stole the source code of the world\'s', (255, 255, 255), 0.05),
             Text(0, 0, 'most powerful AI. You need to break into their super', (255, 255, 255), 0.05),
             Text(0, 0, 'secure facility and erase the data ASAP.', (255, 255, 255), 0.05),
@@ -100,7 +100,7 @@ class CompleteScreen(StoryScreen):
     def __init__(self, game):
         super().__init__(game)
         self.lines = [
-            Text(0, 0, 'Congratulations, you have successfully destroyed', (255, 255, 255), 0.05),
+            Text(0, 0, 'Congratulations, you have successfully destroyed', (255, 255, 255), 0.05, delay=2),
             Text(0, 0, 'the super AI!', (255, 255, 255), 0.05),
             Text(0, 0, '', (128, 35, 255), 0.05),
             Text(0, 0, 'Mission Report:', (128, 35, 255), 0.05),
@@ -126,7 +126,7 @@ class CompleteScreen(StoryScreen):
 class LevelScreen:
     def __init__(self, game):
         self.game = game
-        self.text = Text(0, 0, 'Sector ' + str(self.game.level_manager.current_level), (255, 255, 255), 0.05)
+        self.text = Text(0, 0, 'Sector ' + str(self.game.level_manager.current_level), (255, 255, 255), 0.05, delay=2)
         self.delay = 4
         self.game.camera.reset()
 

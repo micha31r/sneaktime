@@ -69,6 +69,25 @@ class DisguisePowerUp:
             if self.angle > 360:
                 self.angle = 0
 
+    def draw_status(self, screen, index):
+        line_width = 500
+        gap = 20
+        y = 20 + index*(self.img_h/2 + 10) # This assumes all images are the same height
+        ww, wh = self.game.window.get_size()
+        scaled_img = pg.transform.scale(self.img, (int(self.img_w/2), int(self.img_h/2)))
+        iw, ih = scaled_img.get_size()
+        pos = pg.Vector2((ww - line_width - gap - iw) / 2, y) + self.game.camera.pos
+        screen.blit(scaled_img, pos)
+        pos.x += iw + gap
+        pos.y += ih/2
+        rect = (pos.x, pos.y - 2, line_width * self.timer / 10, 4)
+        pg.draw.rect(screen, (128, 35, 255), rect,
+            border_top_left_radius=5,
+            border_top_right_radius=5,
+            border_bottom_left_radius=5,
+            border_bottom_right_radius=5
+        )
+
     def draw(self, screen):
         rotated_img = pg.transform.rotate(self.img, self.angle)
         new_rect = rotated_img.get_rect(center=center(*self.pos, self.img_w, self.img_h))

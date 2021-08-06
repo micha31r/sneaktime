@@ -81,6 +81,7 @@ class GameManager:
 
             # Top layers
             self.level_manager.draw_filter(self.screen)
+            self.player.inventory.draw(self.screen)
             self.interface_manager.draw(self.screen)
         elif self.mode == "complete":
             self.complete_screen.draw(self.screen)

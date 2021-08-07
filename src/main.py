@@ -109,12 +109,12 @@ class GameManager:
                     h = 480 if h < 480 else h
                     self.window = pg.display.set_mode((w, h), pg.RESIZABLE)
             
-            dt = self.clock.tick(60)
+            dt = self.clock.tick(60) / 1000
             # fps debug
-            fps = round(1000/dt)
-            if fps < 40:
-                print(fps, "fps (Low)")
-            dt /= 1000
+            # fps = round(1000/dt)
+            # if fps < 40:
+            #     print(fps, "fps (Low)")
+            # dt /= 1000
 
             self.update(dt)
 

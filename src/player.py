@@ -101,6 +101,7 @@ class Player:
                 self.game.change_speed(0, 1)
                 self.game.particle_manager.generate(*self.c_pos, self.game.get_color("primary"), (10, 20))
                 if self.game.level_manager.lockdown:
+                    self.game.level_manager.lockdown = False
                     sound_effects["alarm"].fadeout(1000)
                 sound_effects["splatter"].play()
 
@@ -196,6 +197,7 @@ class Player:
                         self.game.change_speed(0, 1)
                         self.completed_level = True
                         if self.game.level_manager.lockdown:
+                            self.game.level_manager.lockdown = False
                             sound_effects["alarm"].fadeout(1000)
                         sound_effects["aura"].play()
                         # Update stats

@@ -5,7 +5,7 @@ pg.init()
 
 BASE_DIR = path.dirname(__file__)
 WINDOW_SIZE = W_WIDTH, W_HEIGHT = 640, 480
-WORLD_SIZE = (640*3, 480*3)
+WORLD_SIZE = (640*4, 480*4)
 
 rs_dir = path.join(BASE_DIR, "resources")
 

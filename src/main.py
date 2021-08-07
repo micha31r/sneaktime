@@ -24,7 +24,7 @@ class GameManager:
         self.target_speed = 1
         self.speed = 1
         self.speed_change_constant = 4
-        self.current_theme = "green"
+        self.current_theme = "purple"
 
         # Game components
         self.camera = camera.Camera(self)

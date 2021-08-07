@@ -13,18 +13,82 @@ LEVELS = [
         "items": {
             "key": 1,
         },
-        "theme": "green",
+        "theme": "purple",
         "path": "/maps/tilemap1.json",
         "message": "Objective: collect 1 star",
     },
     {
         "items": {
-            "key": 3,
-            "boss_death_comfirmation": 1, # This must be set for the last level
+            "key": 1,
         },
         "theme": "purple",
+        "path": "/maps/tilemap3.json",
+        "message": "Objective: collect 1 star",
+    },
+    {
+        "items": {
+            "key": 2,
+        },
+        "theme": "yellow",
+        "path": "/maps/tilemap4.json",
+        "message": "Objective: collect 2 stars",
+    },
+    {
+        "items": {
+            "key": 2,
+        },
+        "theme": "yellow",
+        "path": "/maps/tilemap5.json",
+        "message": "Objective: collect 2 stars",
+    },
+    {
+        "items": {
+            "key": 1,
+        },
+        "theme": "green",
+        "path": "/maps/tilemap6.json",
+        "message": "Objective: collect 1 star",
+    },
+    {
+        "items": {
+            "key": 3,
+        },
+        "theme": "green",
         "path": "/maps/tilemap2.json",
-        "message": "Objective: collect 3 stars and destroy their technology",
+        "message": "Objective: collect 3 stars",
+    },
+    {
+        "items": {
+            "key": 3,
+        },
+        "theme": "blue",
+        "path": "/maps/tilemap7.json",
+        "message": "Objective: collect 3 stars",
+    },
+    {
+        "items": {
+            "key": 3,
+        },
+        "theme": "blue",
+        "path": "/maps/tilemap8.json",
+        "message": "Objective: collect 3 stars",
+    },
+    {
+        "items": {
+            "key": 1,
+        },
+        "theme": "red",
+        "path": "/maps/tilemap9.json",
+        "message": "Objective: collect 1 star",
+    },
+    {
+        "items": {
+            "key": 4,
+            "boss_death_comfirmation": 1, # This must be set for the last level
+        },
+        "theme": "red",
+        "path": "/maps/tilemap10.json",
+        "message": "Objective: collect 4 stars and destroyed the machine",
     },
 ]
 
@@ -183,6 +247,7 @@ class LevelManager:
                 self.lockdown_timer = 10
                 self.lockdown_opacity_counter = 0
                 self.play_lockdown_sound = False
+                self.game.enemy_manager.detect_outside_FOV = False
                 sound_effects["alarm"].fadeout(1000)
         if self.show_message:
             self.show_message_timer -= dt

@@ -47,7 +47,7 @@ class StoryScreen:
         self.game = game
         self.lines = [
             Text(0, 0, 'Mission:', self.game.get_color("primary"), 0.05, delay=2),
-            Text(0, 0, 'The bad guys are building somthing sinister,', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'The bad guys are building something sinister,', self.game.get_color("text"), 0.05),
             Text(0, 0, 'you need to sneak into their base and destroy', self.game.get_color("text"), 0.05),
             Text(0, 0, 'whatever technology they are hiding', self.game.get_color("text"), 0.05),
             Text(0, 0, '', self.game.get_color("text"), 0.05),

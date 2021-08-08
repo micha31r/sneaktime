@@ -16,6 +16,7 @@ OPTIONS = {
 }
 
 setup(
+    name="sneaktime",
     app=APP,
     data_files=DATA_FILES,
     options={'py2app': OPTIONS},

@@ -48,9 +48,11 @@ class BossDeathComfirmation:
 class Boss:
     def __init__(self, game, x, y):
         self.game = game
-        self.health = 20
+        self.health = 10
         self.shoot_angle = random.randint(0, 360)
         self.shoot_timer = random.uniform(0.5, 3)
+        self.explosion_counter = 0
+        self.explosion_timer = random.uniform(0.2, 1)
 
         # Sprites & Animation
         self.load_sprite()
@@ -72,22 +74,32 @@ class Boss:
 
     def on_collision_with_bullet(self, i):
         self.health -= 1
-        # Shoot back immediately
-        self.shoot()
-        self.shoot_timer = random.uniform(0.5, 3)
-        self.shoot_angle = random.randint(0, 360)
-        if self.health < 0 and not self.defeated:
-            self.defeated = True
-            self.game.interface_manager.message("Mission accomplished, the technology has been destroyed", typing_effect=False)
-            self.game.player.inventory.add_item(BossDeathComfirmation())
-            self.game.particle_manager.generate(*self.c_pos, self.game.get_color("third"), (10, 20))
+        if self.health > 0:
+            # Shoot back immediately
+            self.shoot()
+            self.shoot_timer = random.uniform(0.5, 3)
+            self.shoot_angle = random.randint(0, 360)
 
     def shoot(self):
         for i in range(0, 360, 60):
             self.game.particle_manager.add(bullet.Bullet(self.game, *self.c_pos, math.radians(i+self.shoot_angle), "enemy"))
         
     def update(self, dt, _):
-        if not self.defeated:
+        if self.health <= 0:
+            if self.explosion_counter < 9:
+                self.explosion_timer -= dt
+                if self.explosion_timer < 0:
+                    self.explosion_timer = self.explosion_timer = random.uniform(0.2, 1)
+                    self.explosion_counter += 1
+                    self.game.particle_manager.generate(*self.c_pos, self.game.get_color("primary"), (20, 30))
+                    self.game.particle_manager.generate(*self.c_pos, self.game.get_color("third"), (20, 30))
+                    sound_effects["explode"].play()
+                self.game.camera.track((self.pos.x, self.pos.y, self.img_w, self.img_h))
+            elif not self.defeated:
+                self.defeated = True
+                self.game.interface_manager.message("Mission accomplished, the technology has been destroyed", typing_effect=False)
+                self.game.player.inventory.add_item(BossDeathComfirmation())
+        else:
             self.shoot_timer -= dt
             if self.shoot_timer < 0 and collide(self.detection_obj, self.game.player.collision_obj):
                 self.shoot()

@@ -83,7 +83,7 @@ LEVELS = [
     },
     {
         "items": {
-            "key": 4,
+            "key": 3,
             "boss_death_comfirmation": 1, # This must be set for the last level
         },
         "theme": "red",
@@ -232,23 +232,24 @@ class LevelManager:
         self.play_lockdown_sound = False
 
     def update(self, dt):
-        if self.lockdown:
-            if not self.play_lockdown_sound:
-                self.play_lockdown_sound = True
-                sound_effects["alarm"].play(-1)
-                self.game.player.lockdown_count_change += 1
-            self.game.enemy_manager.detect_outside_FOV = True
-            self.lockdown_timer -= dt
-            self.lockdown_opacity_counter += dt
-            # Deactivate lockdown when opacity is approximately 0 (50 + -1 * 50 = 0)
-            if self.lockdown_timer < 0 and math.sin(self.lockdown_opacity_counter) < -0.9:
-                # Code here to show restart menu
-                self.lockdown = False
-                self.lockdown_timer = 10
-                self.lockdown_opacity_counter = 0
-                self.play_lockdown_sound = False
-                self.game.enemy_manager.detect_outside_FOV = False
-                sound_effects["alarm"].fadeout(1000)
+        if self.game.player.alive:
+            if self.lockdown:
+                if not self.play_lockdown_sound:
+                    self.play_lockdown_sound = True
+                    sound_effects["alarm"].play(-1)
+                    self.game.player.lockdown_count_change += 1
+                self.game.enemy_manager.detect_outside_FOV = True
+                self.lockdown_timer -= dt
+                self.lockdown_opacity_counter += dt
+                # Deactivate lockdown when opacity is approximately 0 (50 + -1 * 50 = 0)
+                if self.lockdown_timer < 0 and math.sin(self.lockdown_opacity_counter) < -0.9:
+                    # Code here to show restart menu
+                    self.lockdown = False
+                    self.lockdown_timer = 10
+                    self.lockdown_opacity_counter = 0
+                    self.play_lockdown_sound = False
+                    self.game.enemy_manager.detect_outside_FOV = False
+                    sound_effects["alarm"].fadeout(1000)
         if self.show_message:
             self.show_message_timer -= dt
             if self.show_message_timer < 0:

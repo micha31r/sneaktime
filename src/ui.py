@@ -182,7 +182,11 @@ class PopUpMessage:
     def __init__(self, game, text, retract=True, delay=2, typing_effect=True):
         self.game = game
         self.margin = 4
-        self.text = Text(0, 0, text, self.game.get_color("text"), 0.02, typing_effect=typing_effect)
+        primary_brightness = brightness(*self.game.get_color("primary"))
+        color = (0, 0, 0)
+        if primary_brightness < 128:
+            color = (255, 255, 255)
+        self.text = Text(0, 0, text, color, 0.02, typing_effect=typing_effect)
         self.retract = retract
         self.retract_delay = delay
         self.render_height = 0

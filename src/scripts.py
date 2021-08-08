@@ -9,6 +9,9 @@ def center(x, y, w, h, default=True):
         return Vector(x+w/2, y+h/2)
     return pg.Vector2(x+w/2, y+h/2)
 
+def brightness(r, g, b):
+    return (r + g + b) / 255
+
 # Draw n sided regular polygons
 # https://stackoverflow.com/questions/29064259/drawing-pentagon-hexagon-in-pygame
 def draw_ngon(Surface, color, n, radius, position, angle=0):

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.7.0" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="64" tileheight="64" infinite="1" nextlayerid="12" nextobjectid="37">
+<map version="1.5" tiledversion="1.7.0" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="64" tileheight="64" infinite="1" nextlayerid="12" nextobjectid="38">
  <tileset firstgid="1" source="tileset.tsx"/>
  <layer id="3" name="Tile Layer 1" width="100" height="100">
   <data encoding="csv">
@@ -376,6 +376,9 @@
   </object>
   <object id="36" x="1024.48" y="1280.2">
    <polygon points="0,0 -65.2904,64.0102 0.320051,64.0102"/>
+  </object>
+  <object id="37" x="959.698" y="64.6516">
+   <polygon points="0,0 -0.419815,-65.0714 128.463,-65.4912 128.463,-0.839631"/>
   </object>
  </objectgroup>
  <objectgroup id="11" name="Walls 2">

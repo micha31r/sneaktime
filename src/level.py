@@ -83,7 +83,7 @@ LEVELS = [
     },
     {
         "items": {
-            "key": 3,
+            "key": 4,
             "boss_death_comfirmation": 1, # This must be set for the last level
         },
         "theme": "red",

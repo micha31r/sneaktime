@@ -106,12 +106,14 @@ class CompleteScreen(StoryScreen):
             Text(0, 0, 'Mission Report:', self.game.get_color("primary"), 0.05),
             Text(0, 0, f'Time: {round(self.game.player.gameplay_timer, 2)}s', self.game.get_color("text"), 0.05),
             Text(0, 0, f'Death Count: {self.game.player.death_count}', self.game.get_color("text"), 0.05),
-            Text(0, 0, f'Enemy killed: {self.game.player.kill_count}', self.game.get_color("text"), 0.05),
+            Text(0, 0, f'Enemy Killed: {self.game.player.kill_count}', self.game.get_color("text"), 0.05),
             Text(0, 0, f'Lockdown Triggered: {self.game.player.lockdown_count}', self.game.get_color("text"), 0.05),
             Text(0, 0, f'Powerup Used: {self.game.player.powerup_count}', self.game.get_color("text"), 0.05),
             Text(0, 0, f'Bullet Used: {self.game.player.bullet_count}', self.game.get_color("text"), 0.05),
             Text(0, 0, '', self.game.get_color("text"), 0.05),
-            Text(0, 0, 'Thank you for playing', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'Thank you for playing.', self.game.get_color("text"), 0.05),
+            Text(0, 0, '', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'Copyright 2021 Michael Ren', self.game.get_color("primary"), 0.05),
         ]
         self.block_height = self.lines[0].ch * len(self.lines)
         self.game.camera.reset()

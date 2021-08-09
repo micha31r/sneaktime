@@ -198,7 +198,7 @@ class PopUpMessage:
         return self.complete
 
     def update(self, dt):
-        dt /= self.game.speed
+        dt /= self.game.speed or 1
         dy = self.target_y - self.render_height
         self.render_height += dy * self.transition_speed * dt
         if dy < 0.01:

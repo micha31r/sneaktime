@@ -21,7 +21,9 @@ class ItemManager:
                 if item.type == "item":
                     sound_effects["pickup_item"].play()
                     self.game.player.inventory.add_item(item)
-                    self.game.interface_manager.message(f"Collected {item.name}", typing_effect=False)
+                    current = len(self.game.player.inventory.get_item("key")) # The amount the player has
+                    total = self.game.level_manager.current_level_obj()["items"]["key"] # The total amount required
+                    self.game.interface_manager.message(f"Collected {item.name} ({current}/{total})", typing_effect=False)
                     color = self.game.get_color("third")
                 else:
                     sound_effects["pickup_powerup"].play()

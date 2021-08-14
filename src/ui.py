@@ -162,6 +162,8 @@ class StoryScreen:
 class SelectScreen:
     def __init__(self, game, typing_effect=True):
         self.game = game
+        self.left_arrow_img = pg.image.load(rs_dir + "/left_arrow.png").convert_alpha()
+        self.right_arrow_img = pg.image.load(rs_dir + "/right_arrow.png").convert_alpha()
         self.heading = Text(0, 0, 'Select Level:', self.game.get_color("primary"), 0.05, delay=2, typing_effect=typing_effect)
         self.numbers = []
         self.font = pg.font.Font(rs_dir + "/fonts/RobotoMonoMedium.ttf", 16)
@@ -216,6 +218,12 @@ class SelectScreen:
         ww, wh = self.game.window.get_size()
         self.start_x = (ww - self.block_width) / 2
         self.start_y = (wh - self.block_height) / 2 + 50
+
+        # Draw arrows after all buttons are rendered
+        if self.visible_buttons > 9:
+            iw, ih = self.left_arrow_img.get_size()
+            screen.blit(self.left_arrow_img, (self.start_x - 64 - iw/2, (wh - ih)/2))
+            screen.blit(self.right_arrow_img, (self.start_x + 64 + self.block_width - iw/2, (wh - ih)/2))
 
         x = 0
         y = 0

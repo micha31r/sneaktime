@@ -73,10 +73,11 @@ class GameManager:
         if self.has_save():
             with open(cache_path, 'r') as f:
                 d = json.load(f)
-                # Always resume from the "level" screen
-                self.mode = "level"
-                self.level_screen = ui.LevelScreen(self)
-                self.level_manager.switch(d["current_level"] + 1)
+                # Always resume from the "select" screen
+                self.mode = "select"
+                self.level_manager.current_level = d["current_level"] + 1
+                self.level_manager.unlocked_level = d["current_level"] + 1
+                self.select_screen = ui.SelectScreen(self)
                 # Load player stats
                 p = self.player
                 p.gameplay_timer = d["gameplay_timer"]
@@ -99,6 +100,8 @@ class GameManager:
             self.splash_screen.update(dt)
         elif self.mode == "story":
             self.story_screen.update(dt)
+        elif self.mode == "select":
+            self.select_screen.update(dt)
         elif self.mode == "level":
             self.level_screen.update(dt)
         elif self.mode == "main":
@@ -118,6 +121,8 @@ class GameManager:
             self.splash_screen.draw(self.screen)
         elif self.mode == "story":
             self.story_screen.draw(self.screen)
+        elif self.mode == "select":
+            self.select_screen.draw(self.screen)
         elif self.mode == "level":
             self.level_screen.draw(self.screen)
         elif self.mode == "main":

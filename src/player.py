@@ -276,10 +276,11 @@ class Player:
                 elif self.retry_message.text.index == len(self.retry_message.text.text):
                     if keys[pg.K_SPACE]:
                         sound_effects["confirm"].play()
-                        self.game.mode = "level"
+                        # Allow the player to select level
+                        self.game.mode = "select"
                         self.game.speed = 1
                         self.game.target_speed = 1
-                        self.game.level_screen = ui.LevelScreen(self.game)
+                        self.game.select_screen = ui.SelectScreen(self.game, False)
                         self.game.interface_manager.reset()
                         return
 

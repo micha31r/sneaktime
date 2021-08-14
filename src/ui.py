@@ -1,5 +1,6 @@
 import pygame as pg
 
+import theme
 from settings import *
 from scripts import *
 
@@ -137,9 +138,9 @@ class StoryScreen:
             if self.line_index == len(self.lines)-1:
                 if keys[pg.K_SPACE]:
                     sound_effects["confirm"].play()
-                    self.game.mode = "level"
+                    self.game.mode = "select"
                     self.game.speed = 1
-                    self.game.level_screen = LevelScreen(self.game)
+                    self.game.select_screen = SelectScreen(self.game)
             if self.delay < 0 and self.line_index < len(self.lines)-1:
                 self.delay = 1
                 self.line_index += 1
@@ -156,6 +157,92 @@ class StoryScreen:
             x, _, _, _ = t.text_obj.get_rect(center=center(0, 0, *self.game.window.get_size()))
             t.pos = pg.Vector2(x, self.start_y + t.ch * i)
             t.draw(screen)
+
+
+class SelectScreen:
+    def __init__(self, game, typing_effect=True):
+        self.game = game
+        self.heading = Text(0, 0, 'Select Level:', self.game.get_color("primary"), 0.05, delay=2, typing_effect=typing_effect)
+        self.numbers = []
+        self.font = pg.font.Font(rs_dir + "/fonts/RobotoMonoMedium.ttf", 16)
+        _, _, self.cw, self.ch = self.font.render("0", True, (0, 0, 0)).get_rect()
+        self.button_width = 100
+        self.button_height = 100
+        self.block_width = self.button_width * 4
+        self.block_height = self.button_height * 3 + 50
+        self.button_timer = 0.05
+        self.visible_buttons = 0
+        self.selected_button = self.game.level_manager.current_level
+        self.key_down = False
+        self.game.camera.reset()
+
+    def update(self, dt):
+        if self.heading.index == len(self.heading.text):
+            if self.visible_buttons < 10:
+                self.button_timer -= dt
+                if self.button_timer < 0:
+                    self.visible_buttons += 1
+                    self.button_timer = 0.05
+            else:
+                keys = pg.key.get_pressed()
+                if keys[pg.K_LEFT]:
+                    if not self.key_down and self.selected_button > 0:
+                        self.selected_button -= 1
+                    self.key_down = True
+                elif keys[pg.K_RIGHT]:
+                    if not self.key_down:
+                        self.selected_button += 1
+                        max_level = self.game.level_manager.unlocked_level
+                        if self.selected_button > max_level: 
+                            self.selected_button = max_level
+                    self.key_down = True
+                elif keys[pg.K_SPACE]:
+                    sound_effects["confirm"].play()
+                    self.game.mode = "level"
+                    self.game.level_manager.switch(self.selected_button)
+                    self.game.level_screen = LevelScreen(self.game)
+                else:
+                    self.key_down = False
+
+        self.heading.update(dt)
+        # Align text to the center of the screen
+        _, wh = self.game.window.get_size()
+        x, _, _, _ = self.heading.text_obj.get_rect(center=center(0, 0, *self.game.window.get_size()))
+        self.heading.pos = pg.Vector2(x, (wh - self.block_height) / 2)
+
+    def draw(self, screen):
+        self.heading.draw(screen)
+
+        ww, wh = self.game.window.get_size()
+        self.start_x = (ww - self.block_width) / 2
+        self.start_y = (wh - self.block_height) / 2 + 50
+
+        x = 0
+        y = 0
+        for i in range(10):
+            if i < self.visible_buttons:
+                gap = 20
+                pos = pg.Vector2(self.start_x + self.button_width * x, self.start_y + self.button_height * y)
+                bg_color = (0, 0, 0)
+                color = (0, 0, 0)
+                stroke = 1
+                if self.game.level_manager.level_unlocked(i):
+                    bg_color = theme.THEMES[self.game.level_manager.current_level_obj(i)["theme"]]["primary"]
+                    if brightness(*bg_color) < 150:
+                        color = (255, 255, 255)
+                    stroke = 0
+                # Draw rect and create text object
+                obj = self.font.render(str(i), True, color)
+                if self.selected_button == i:
+                    gap = 10
+                pg.draw.rect(screen, bg_color, (pos.x + gap, pos.y + gap, self.button_width - 2*gap, self.button_height - 2*gap), stroke, 20, 20, 20, 20)
+                # Draw number
+                offset_pos = pg.Vector2((self.button_width - self.cw) / 2, (self.button_height - self.ch) / 2)
+                screen.blit(obj, pos + offset_pos)
+                x += 1
+                if x > 3:
+                    y += 1
+                    x = 0
 
 
 class CompleteScreen(StoryScreen):
@@ -248,7 +335,7 @@ class PopUpMessage:
         self.margin = 4
         primary_brightness = brightness(*self.game.get_color("primary"))
         color = (0, 0, 0)
-        if primary_brightness < 128:
+        if primary_brightness < 150:
             color = (255, 255, 255)
         self.text = Text(0, 0, text, color, 0.02, typing_effect=typing_effect)
         self.retract = retract

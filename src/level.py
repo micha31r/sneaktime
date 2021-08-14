@@ -102,17 +102,26 @@ class LevelManager:
         self.show_message = False
         self.show_message_timer = 2
         self.current_level = n
+        self.unlocked_level = n
         self.levels = LEVELS
         self.transparent_surface = pg.Surface(WORLD_SIZE, pg.SRCALPHA)
 
-    def current_level_obj(self):
-        return self.levels[self.current_level]
+    def current_level_obj(self, n=None):
+        if n == None:
+            n = self.current_level
+        return self.levels[n]
 
     def current_map(self):
         return self.map
 
+    def level_unlocked(self, n):
+        if n <= self.unlocked_level:
+            return True
+        return False
+
     def switch(self, n):
         self.current_level = n
+        self.unlocked_level = self.current_level
         # Set theme
         level_obj = self.current_level_obj()
         if self.game.current_theme != level_obj["theme"]:

@@ -51,6 +51,43 @@ class GameManager:
         if const:
             self.speed_change_constant = const
 
+    def has_save(self):
+        return os.path.isfile(cache_path)
+
+    def save(self):
+        p = self.player
+        data = {
+            "current_level": self.level_manager.current_level,
+            # Stats
+            "gameplay_timer": p.gameplay_timer,
+            "death_count": p.death_count,
+            "kill_count": p.kill_count,
+            "lockdown_count": p.lockdown_count,
+            "powerup_count": p.powerup_count,
+            "bullet_count": p.bullet_count,
+        }
+        with open(cache_path, 'w') as f:
+            json.dump(data, f)
+
+    def load(self):
+        if self.has_save():
+            with open(cache_path, 'r') as f:
+                d = json.load(f)
+                # Always resume from the "level" screen
+                self.mode = "level"
+                self.level_screen = ui.LevelScreen(self)
+                self.level_manager.switch(d["current_level"] + 1)
+                # Load player stats
+                p = self.player
+                p.gameplay_timer = d["gameplay_timer"]
+                p.death_count = d["death_count"]
+                p.kill_count = d["kill_count"]
+                p.lockdown_count = d["lockdown_count"]
+                p.powerup_count = d["powerup_count"]
+                p.bullet_count = d["bullet_count"]
+            self.interface_manager.message(f"You progress is resumed from the previous session", typing_effect=False)
+            return True
+            
     def update(self, dt):
         ds = self.target_speed - self.speed # Delta speed
         self.speed += ds * self.speed_change_constant * dt # Increase the constant to increase the speed change
@@ -72,9 +109,9 @@ class GameManager:
             self.particle_manager.update(dt)
             self.item_manager.update(dt)
             self.trap_manager.update(dt)
-            self.interface_manager.update(dt)
         elif self.mode == "complete":
             self.complete_screen.update(dt)
+        self.interface_manager.update(dt)
 
     def draw(self):
         if self.mode == "splash":
@@ -94,9 +131,9 @@ class GameManager:
             # Top layers
             self.level_manager.draw_filter(self.screen)
             self.player.inventory.draw(self.screen)
-            self.interface_manager.draw(self.screen)
         elif self.mode == "complete":
             self.complete_screen.draw(self.screen)
+        self.interface_manager.draw(self.screen)
 
     def event_loop(self):
         while 1:

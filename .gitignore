@@ -13,6 +13,7 @@ bin/
 include/
 lib/
 pyvenv.cfg
+cache.json
 
 # Distribution / packaging
 .Python

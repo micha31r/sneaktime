@@ -8,8 +8,9 @@ BASE_DIR = Path(path.dirname(__file__))
 WINDOW_SIZE = W_WIDTH, W_HEIGHT = 640, 480
 WORLD_SIZE = (640*4, 480*4)
 
+cache_path = path.join(BASE_DIR.parent, "cache.json")
 rs_dir = path.join(BASE_DIR.parent.parent, "resources") # Production
-# rs_dir = path.join(BASE_DIR, "resources") # Development
+rs_dir = path.join(BASE_DIR, "resources") # Development
 
 # Kenney Audio Assets (https://kenney.nl/assets?q=audio)
 # Shapeforms Audio Assets (https://shapeforms.itch.io/shapeforms-audio-free-sfx)

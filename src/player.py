@@ -199,6 +199,7 @@ class Player:
                         if self.game.level_manager.lockdown:
                             self.game.level_manager.lockdown = False
                             sound_effects["alarm"].fadeout(1000)
+                        self.game.save()
                         sound_effects["aura"].play()
                         # Update stats
                         self.kill_count += self.kill_count_change
@@ -216,6 +217,7 @@ class Player:
                                     sound_effects["confirm"].play()
                                     self.game.speed = 1
                                     self.game.target_speed = 1
+                                    self.game.interface_manager.reset()
                                     lv_mger.next()
                                     return
 
@@ -278,6 +280,7 @@ class Player:
                         self.game.speed = 1
                         self.game.target_speed = 1
                         self.game.level_screen = ui.LevelScreen(self.game)
+                        self.game.interface_manager.reset()
                         return
 
         # Check if player has armour

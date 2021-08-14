@@ -3,6 +3,66 @@ import pygame as pg
 from settings import *
 from scripts import *
 
+class Text:
+    def __init__(self, x, y, text, color, interval, size=16, direction=1, typing_effect=True, delay=0):
+        self.pos = pg.Vector2(x, y)
+        self.text = text
+        self.color = color
+        self.delay = delay
+        self.interval = interval
+        self.timer = interval
+        self.direction = direction
+        self.index = 0 if direction == 1 else len(self.text) - 1
+        self.font = pg.font.Font(rs_dir + "/fonts/RobotoMonoMedium.ttf", size)
+        self.focus = True
+        self.cursor = False
+        self.cursor_timer = 0.4
+        
+        if not typing_effect:
+            self.index = len(self.text)
+            self.focus = False
+
+        _, _, self.cw, self.ch = self.font.render("0", True, self.color).get_rect()
+        self.text_obj = self.font.render(self.text[:self.index], True, self.color)
+
+    def update(self, dt):
+        typing = False
+
+        if self.delay > 0:
+            self.delay -= dt
+        else:
+            self.timer -= dt
+            if self.timer < 0:
+                if (self.direction == 1 and self.index < len(self.text)) or (self.direction == -1 and self.index > 0):
+                    # Only play sound for every 2 characters typed
+                    if self.index % 2 == 0:
+                        sound_effects["click"].play()
+                    self.index += self.direction
+                    self.timer = self.interval
+                    self.text_obj = self.font.render(self.text[:self.index], True, self.color)
+                    # Show cursor while typing
+                    self.cursor = True
+                    typing = True
+
+        # Blink cursor
+        if self.focus:
+            if not typing:
+                self.cursor_timer -= dt
+                if self.cursor_timer < 0:
+                    self.cursor_timer = 0.5
+                    if self.cursor:
+                        self.cursor = False
+                    else:
+                        self.cursor = True
+        else:
+            self.cursor = False
+
+    def draw(self, screen):
+        if self.cursor:
+            pg.draw.rect(screen, self.color, (self.pos.x + self.cw * self.index, self.pos.y, self.cw, self.ch))
+        screen.blit(self.text_obj, self.pos)
+        
+
 class SplashScreen:
     def __init__(self, game):
         self.game = game
@@ -32,9 +92,11 @@ class SplashScreen:
         if self.show_subheading and self.subheading.index == len(self.subheading.text):
             keys = pg.key.get_pressed()
             if keys[pg.K_SPACE]:
-                sound_effects["confirm"].play()
-                self.game.mode = "story"
-                self.game.story_screen = StoryScreen(self.game)
+                # Load from any previous states or continue to the story screen
+                if not self.game.load():
+                    sound_effects["confirm"].play()
+                    self.game.mode = "story"
+                    self.game.story_screen = StoryScreen(self.game)
 
     def draw(self, screen):
         self.heading.draw(screen)
@@ -47,17 +109,17 @@ class StoryScreen:
         self.game = game
         self.lines = [
             Text(0, 0, 'Mission:', self.game.get_color("primary"), 0.05, delay=2),
-            Text(0, 0, 'The bad guys are building something sinister,', self.game.get_color("text"), 0.05),
-            Text(0, 0, 'you need to sneak into their base and destroy', self.game.get_color("text"), 0.05),
-            Text(0, 0, 'whatever technology they are hiding.', self.game.get_color("text"), 0.05),
-            Text(0, 0, '', self.game.get_color("text"), 0.05),
-            Text(0, 0, 'Controls:', self.game.get_color("primary"), 0.05),
-            Text(0, 0, 'Arrow keys to move.', self.game.get_color("text"), 0.05),
-            Text(0, 0, 'Hold down SPACE to enter aim,', self.game.get_color("text"), 0.05),
-            Text(0, 0, 'use left and right arrows to adjust angle,', self.game.get_color("text"), 0.05),
-            Text(0, 0, 'then release SPACE to shoot.', self.game.get_color("text"), 0.05),
-            Text(0, 0, '', self.game.get_color("text"), 0.05),
-            Text(0, 0, 'Press SPACE to begin', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'The bad guys are building something sinister,', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'you need to sneak into their base and destroy', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'whatever technology they are hiding.', self.game.get_color("text"), 0.05),
+            # Text(0, 0, '', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'Controls:', self.game.get_color("primary"), 0.05),
+            # Text(0, 0, 'Arrow keys to move.', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'Hold down SPACE to enter aim,', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'use left and right arrows to adjust angle,', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'then release SPACE to shoot.', self.game.get_color("text"), 0.05),
+            # Text(0, 0, '', self.game.get_color("text"), 0.05),
+            # Text(0, 0, 'Press SPACE to begin', self.game.get_color("text"), 0.05),
         ]
         self.line_index = 0
         self.block_height = self.lines[0].ch * len(self.lines)

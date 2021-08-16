@@ -121,7 +121,8 @@ class LevelManager:
 
     def switch(self, n):
         self.current_level = n
-        self.unlocked_level = self.current_level
+        if self.unlocked_level < n:
+            self.unlocked_level = n
         # Set theme
         level_obj = self.current_level_obj()
         if self.game.current_theme != level_obj["theme"]:

@@ -80,6 +80,7 @@ class Player:
         self.retry_message = None
         self.success_message = None
         self.completed_level = False
+        self.gameplay_timer = 0
         self.kill_count_change = 0
         self.lockdown_count_change = 0
         self.powerup_count_change = 0
@@ -199,13 +200,20 @@ class Player:
                         if self.game.level_manager.lockdown:
                             self.game.level_manager.lockdown = False
                             sound_effects["alarm"].fadeout(1000)
-                        self.game.save()
-                        sound_effects["aura"].play()
                         # Update stats
                         self.kill_count += self.kill_count_change
                         self.lockdown_count += self.lockdown_count_change
                         self.powerup_count += self.powerup_count_change
                         self.bullet_count += self.bullet_count_change
+                        self.game.level_manager.record_stats()
+                        self.game.save()
+                        sound_effects["aura"].play()
+                        # Reset stats
+                        self.death_count = 0
+                        self.kill_count = 0
+                        self.lockdown_count = 0
+                        self.powerup_count = 0
+                        self.bullet_count = 0
                     else:
                         if self.game.speed < 0.01:
                             if self.show_success_message:

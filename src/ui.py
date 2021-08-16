@@ -110,17 +110,17 @@ class StoryScreen:
         self.game = game
         self.lines = [
             Text(0, 0, 'Mission:', self.game.get_color("primary"), 0.05, delay=2),
-            # Text(0, 0, 'The bad guys are building something sinister,', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'you need to sneak into their base and destroy', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'whatever technology they are hiding.', self.game.get_color("text"), 0.05),
-            # Text(0, 0, '', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'Controls:', self.game.get_color("primary"), 0.05),
-            # Text(0, 0, 'Arrow keys to move.', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'Hold down SPACE to enter aim,', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'use left and right arrows to adjust angle,', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'then release SPACE to shoot.', self.game.get_color("text"), 0.05),
-            # Text(0, 0, '', self.game.get_color("text"), 0.05),
-            # Text(0, 0, 'Press SPACE to begin', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'The bad guys are building something sinister,', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'you need to sneak into their base and destroy', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'whatever technology they are hiding.', self.game.get_color("text"), 0.05),
+            Text(0, 0, '', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'Controls:', self.game.get_color("primary"), 0.05),
+            Text(0, 0, 'Arrow keys to move.', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'Hold down SPACE to enter aim,', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'use left and right arrows to adjust angle,', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'then release SPACE to shoot.', self.game.get_color("text"), 0.05),
+            Text(0, 0, '', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'Press SPACE to begin', self.game.get_color("text"), 0.05),
         ]
         self.line_index = 0
         self.block_height = self.lines[0].ch * len(self.lines)
@@ -162,8 +162,8 @@ class StoryScreen:
 class SelectScreen:
     def __init__(self, game, typing_effect=True):
         self.game = game
-        self.left_arrow_img = pg.image.load(rs_dir + "/left_arrow.png").convert_alpha()
-        self.right_arrow_img = pg.image.load(rs_dir + "/right_arrow.png").convert_alpha()
+        self.button_img = pg.image.load(rs_dir + "/button.png").convert_alpha()
+        self.button_pressed_img = pg.image.load(rs_dir + "/button_pressed.png").convert_alpha()
         self.heading = Text(0, 0, 'Select Level:', self.game.get_color("primary"), 0.05, delay=2, typing_effect=typing_effect)
         self.numbers = []
         self.font = pg.font.Font(rs_dir + "/fonts/RobotoMonoMedium.ttf", 16)
@@ -180,7 +180,7 @@ class SelectScreen:
 
     def update(self, dt):
         if self.heading.index == len(self.heading.text):
-            if self.visible_buttons < 10:
+            if self.visible_buttons < len(self.game.level_manager.levels):
                 self.button_timer -= dt
                 if self.button_timer < 0:
                     self.visible_buttons += 1
@@ -190,21 +190,21 @@ class SelectScreen:
                 if keys[pg.K_LEFT]:
                     if not self.key_down and self.selected_button > 0:
                         self.selected_button -= 1
-                    self.key_down = True
+                    self.key_down = 1
                 elif keys[pg.K_RIGHT]:
                     if not self.key_down:
                         self.selected_button += 1
                         max_level = self.game.level_manager.unlocked_level
                         if self.selected_button > max_level: 
                             self.selected_button = max_level
-                    self.key_down = True
+                    self.key_down = 2
                 elif keys[pg.K_SPACE]:
                     sound_effects["confirm"].play()
                     self.game.mode = "level"
                     self.game.level_manager.switch(self.selected_button)
                     self.game.level_screen = LevelScreen(self.game)
                 else:
-                    self.key_down = False
+                    self.key_down = 0
 
         self.heading.update(dt)
         # Align text to the center of the screen
@@ -219,11 +219,17 @@ class SelectScreen:
         self.start_x = (ww - self.block_width) / 2
         self.start_y = (wh - self.block_height) / 2 + 50
 
-        # Draw arrows after all buttons are rendered
-        if self.visible_buttons > 9:
-            iw, ih = self.left_arrow_img.get_size()
-            screen.blit(self.left_arrow_img, (self.start_x - 64 - iw/2, (wh - ih)/2))
-            screen.blit(self.right_arrow_img, (self.start_x + 64 + self.block_width - iw/2, (wh - ih)/2))
+        # Draw buttons after all buttons are rendered
+        if self.visible_buttons > len(self.game.level_manager.levels) - 1:
+            iw, ih = self.button_img.get_size()
+            left_img = self.button_img
+            right_img = self.button_img
+            if self.key_down == 1:
+                left_img = self.button_pressed_img
+            elif self.key_down == 2:
+                right_img = self.button_pressed_img
+            screen.blit(left_img, (self.start_x - 64 - iw/2, (wh - ih)/2))
+            screen.blit(right_img, (self.start_x + 64 + self.block_width - iw/2, (wh - ih)/2))
 
         x = 0
         y = 0
@@ -235,9 +241,9 @@ class SelectScreen:
                 color = (0, 0, 0)
                 stroke = 1
                 if self.game.level_manager.level_unlocked(i):
-                    bg_color = theme.THEMES[self.game.level_manager.current_level_obj(i)["theme"]]["primary"]
-                    if brightness(*bg_color) < 150:
-                        color = (255, 255, 255)
+                    # bg_color = theme.THEMES[self.game.level_manager.current_level_obj(i)["theme"]]["primary"]
+                    # if brightness(*bg_color) < 150:
+                    color = (255, 255, 255)
                     stroke = 0
                 # Draw rect and create text object
                 obj = self.font.render(str(i), True, color)
@@ -256,17 +262,24 @@ class SelectScreen:
 class CompleteScreen(StoryScreen):
     def __init__(self, game):
         super().__init__(game)
+        # Add stats together
+        stats = {}
+        for data in self.game.level_manager.level_stats:
+            if data:
+                for k, v in data.items():
+                    if k in stats: stats[k] += v
+                    else: stats[k] = v
         self.lines = [
             Text(0, 0, 'Congratulations, you have completed your mission', self.game.get_color("text"), 0.05, delay=2),
             Text(0, 0, 'and destroyed the bad guys\' technology!', self.game.get_color("text"), 0.05),
             Text(0, 0, '', self.game.get_color("text"), 0.05),
             Text(0, 0, 'Mission Report:', self.game.get_color("primary"), 0.05),
-            Text(0, 0, f'Time: {round(self.game.player.gameplay_timer, 2)}s', self.game.get_color("text"), 0.05),
-            Text(0, 0, f'Death Count: {self.game.player.death_count}', self.game.get_color("text"), 0.05),
-            Text(0, 0, f'Enemy Killed: {self.game.player.kill_count}', self.game.get_color("text"), 0.05),
-            Text(0, 0, f'Lockdown Triggered: {self.game.player.lockdown_count}', self.game.get_color("text"), 0.05),
-            Text(0, 0, f'Powerup Used: {self.game.player.powerup_count}', self.game.get_color("text"), 0.05),
-            Text(0, 0, f'Bullet Used: {self.game.player.bullet_count}', self.game.get_color("text"), 0.05),
+            Text(0, 0, f'Time: {round(stats["gameplay_timer"], 2)}s', self.game.get_color("text"), 0.05),
+            Text(0, 0, f'Death Count: {stats["death_count"]}', self.game.get_color("text"), 0.05),
+            Text(0, 0, f'Enemy Killed: {stats["kill_count"]}', self.game.get_color("text"), 0.05),
+            Text(0, 0, f'Lockdown Triggered: {stats["lockdown_count"]}', self.game.get_color("text"), 0.05),
+            Text(0, 0, f'Powerup Used: {stats["powerup_count"]}', self.game.get_color("text"), 0.05),
+            Text(0, 0, f'Bullet Used: {stats["bullet_count"]}', self.game.get_color("text"), 0.05),
             Text(0, 0, '', self.game.get_color("text"), 0.05),
             Text(0, 0, 'Thank you for playing.', self.game.get_color("text"), 0.05),
             Text(0, 0, '', self.game.get_color("text"), 0.05),

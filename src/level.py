@@ -104,7 +104,19 @@ class LevelManager:
         self.current_level = n
         self.unlocked_level = n
         self.levels = LEVELS
+        self.level_stats = [{} for i in range(len(LEVELS))]
         self.transparent_surface = pg.Surface(WORLD_SIZE, pg.SRCALPHA)
+
+    def record_stats(self):
+        p = self.game.player
+        self.level_stats[self.current_level] = {
+            "gameplay_timer": p.gameplay_timer,
+            "death_count": p.death_count,
+            "kill_count": p.kill_count,
+            "lockdown_count": p.lockdown_count,
+            "powerup_count": p.powerup_count,
+            "bullet_count": p.bullet_count,
+        }
 
     def current_level_obj(self, n=None):
         if n == None:
@@ -123,6 +135,8 @@ class LevelManager:
         self.current_level = n
         if self.unlocked_level < n:
             self.unlocked_level = n
+        else:
+            self.unlocked_level
         # Set theme
         level_obj = self.current_level_obj()
         if self.game.current_theme != level_obj["theme"]:

@@ -1,3 +1,4 @@
+import sys
 import pygame as pg
 from os import path
 from pathlib import Path
@@ -10,7 +11,10 @@ WORLD_SIZE = (640*4, 480*4)
 
 cache_path = path.join(BASE_DIR.parent, "cache.json")
 rs_dir = path.join(BASE_DIR.parent.parent, "resources") # Production
-# rs_dir = path.join(BASE_DIR, "resources") # Development
+
+# Change resource directory while running with debug flag
+if "-d" in sys.argv or "-debug" in sys.argv:
+	rs_dir = path.join(BASE_DIR, "resources") # Development
 
 # Kenney Audio Assets (https://kenney.nl/assets?q=audio)
 # Shapeforms Audio Assets (https://shapeforms.itch.io/shapeforms-audio-free-sfx)

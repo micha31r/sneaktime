@@ -117,7 +117,7 @@ class StoryScreen:
             Text(0, 0, 'Controls:', self.game.get_color("primary"), 0.05),
             Text(0, 0, 'Arrow keys to move.', self.game.get_color("text"), 0.05),
             Text(0, 0, 'Hold down SPACE to aim,', self.game.get_color("text"), 0.05),
-            Text(0, 0, 'use left and right arrows to adjust angle,', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'use left and right arrows to adjust the angle,', self.game.get_color("text"), 0.05),
             Text(0, 0, 'then release SPACE to shoot.', self.game.get_color("text"), 0.05),
             Text(0, 0, '', self.game.get_color("text"), 0.05),
             Text(0, 0, 'Press SPACE to begin', self.game.get_color("text"), 0.05),

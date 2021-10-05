@@ -363,8 +363,11 @@ class PopUpMessage:
         self.retract_delay = delay
         self.render_height = 0
         self.transition_speed = 4
-        self.target_y = self.text.ch + self.margin * 2
         self.complete = False
+        self.set_target_y()
+
+    def set_target_y(self, y=None):
+        self.target_y = y or self.text.ch + self.margin * 2
 
     def is_expired(self):
         return self.complete
@@ -379,7 +382,7 @@ class PopUpMessage:
                 if self.text.index == len(self.text.text):
                     self.retract_delay -= dt
                     if self.retract_delay < 0:
-                        self.target_y = -2
+                        self.set_target_y(-2)
             # Mark as complete if already retracted
             if self.render_height < 0:
                 self.complete = True

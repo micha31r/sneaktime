@@ -62,6 +62,7 @@ class Player:
         self.death_text = ""
         self.show_retry_message = True
         self.show_success_message = True
+        self.inventory_message = None
 
     def load_sprite(self):
         self.img = pg.image.load(self.game.get_themed_path("characters", "player.png")).convert_alpha()
@@ -77,6 +78,7 @@ class Player:
         self.inventory = inventory.InventoryManager(self.game)
         self.show_retry_message = True
         self.show_success_message = True
+        self.inventory_message = None
         self.retry_message = None
         self.success_message = None
         self.completed_level = False
@@ -275,6 +277,21 @@ class Player:
                         self.angle = math.radians(360) + self.angle
                     if self.angle > math.radians(360):
                         self.angle = self.angle - math.radians(360)
+
+                # Show inventory message when 'e' is pressed
+                if keys[pg.K_e]:
+                    if not self.inventory_message:
+                        current = len(self.inventory.get_item("key")) # The amount the player has
+                        total = self.game.level_manager.current_level_obj()["items"]["key"] # The total amount required
+                        self.inventory_message = self.game.interface_manager.message(f"Collected keys ({current}/{total})", typing_effect=False)
+                    else:
+                        self.inventory_message.set_target_y()
+                elif self.inventory_message:
+                    self.inventory_message.set_target_y(-2)
+                # Reset inventory messages
+                if self.inventory_message and self.inventory_message.complete:
+                    self.inventory_message = None
+
         else:
             if self.game.speed < 0.01:
                 if self.show_retry_message:

@@ -10,6 +10,7 @@ import particle
 import item
 import trap
 import theme
+import tutorial
 from settings import *
 
 pg.init()
@@ -36,6 +37,7 @@ class GameManager:
         self.item_manager = item.ItemManager(self)
         self.trap_manager = trap.TrapManager(self)
         self.interface_manager = ui.InterfaceManager(self)
+        self.tutorial_manager = tutorial.TutorialManager(self)
 
     def get_themed_path(self, folder, file):
         return os.path.join(*[rs_dir, folder, self.current_theme, file])
@@ -99,6 +101,7 @@ class GameManager:
             self.particle_manager.update(dt)
             self.item_manager.update(dt)
             self.trap_manager.update(dt)
+            self.tutorial_manager.update(dt)
         elif self.mode == "complete":
             self.complete_screen.update(dt)
         self.interface_manager.update(dt)
@@ -119,6 +122,7 @@ class GameManager:
             self.enemy_manager.draw(self.screen)
             self.particle_manager.draw(self.screen)
             self.trap_manager.draw(self.screen)
+            self.tutorial_manager.draw(self.screen)
 
             # Top layers
             self.level_manager.draw_filter(self.screen)

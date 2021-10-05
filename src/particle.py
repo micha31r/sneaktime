@@ -1,3 +1,16 @@
+
+"""
+-------------------------------------------------
+    Project: Sneaktime
+    Standard: 91906 (AS3.7)
+    School: Tauranga Boys' College
+    Author: Michael Ren
+    Date: 05 OCT 2021
+    Python: 3.9.6
+    License: MIT
+-------------------------------------------------
+"""
+
 import random, math
 import pygame as pg
 

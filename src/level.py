@@ -160,7 +160,7 @@ class LevelManager:
         self.lockdown_opacity_counter = 0
         self.play_lockdown_sound = False
         self.show_message = False
-        self.show_message_timer = 2
+        self.show_message_timer = 1
         self.current_level = n
         self.unlocked_level = n
         self.levels = LEVELS
@@ -335,7 +335,9 @@ class LevelManager:
                     self.play_lockdown_sound = False
                     self.game.enemy_manager.detect_outside_FOV = False
                     sound_effects["alarm"].fadeout(1000)
-        if self.show_message:
+
+        # Show level message
+        if self.show_message and self.game.player.completed_tutorial:
             self.show_message_timer -= dt
             if self.show_message_timer < 0:
                 self.show_message = False

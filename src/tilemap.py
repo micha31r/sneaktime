@@ -140,8 +140,6 @@ class TiledMap:
                         if tracker["rect"] == spawner["rect"]:
                             tracker["spawner_id"] = spawner["tile_id"]
 
-        print(self.trackers)
-
     def rect_collide(self, rect, target_layer_name=None, exclude_layer_name=None):
         x1 = rect[0]
         y1 = rect[1]

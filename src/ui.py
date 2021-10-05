@@ -121,7 +121,7 @@ class StoryScreen:
     def __init__(self, game):
         self.game = game
         self.lines = [
-            Text(0, 0, 'Mission:', self.game.get_color("primary"), 0.05, delay=2),
+            Text(0, 0, 'Story:', self.game.get_color("primary"), 0.05, delay=2),
             Text(0, 0, 'The bad guys are building something sinister,', self.game.get_color("text"), 0.05),
             Text(0, 0, 'you need to sneak into their base and destroy', self.game.get_color("text"), 0.05),
             Text(0, 0, 'whatever technology they are hiding.', self.game.get_color("text"), 0.05),
@@ -215,6 +215,12 @@ class SelectScreen:
                     sound_effects["confirm"].play()
                     self.game.mode = "level"
                     self.game.level_manager.switch(self.selected_button)
+                    # Reset tutorial if level 0 is selected
+                    if self.selected_button == 0:
+                        self.game.player.completed_tutorial = False
+                        self.game.tutorial_manager.reset()
+                    else:
+                        self.game.player.completed_tutorial = True
                     self.game.level_screen = LevelScreen(self.game)
                 else:
                     self.key_down = 0
@@ -277,7 +283,8 @@ class CompleteScreen(StoryScreen):
         super().__init__(game)
         # Add stats together
         stats = {}
-        for data in self.game.level_manager.level_stats:
+        # Ignore the first level because its a tutorial
+        for data in self.game.level_manager.level_stats[1:]:
             if data:
                 for k, v in data.items():
                     if k in stats: stats[k] += v
@@ -315,7 +322,11 @@ class CompleteScreen(StoryScreen):
 class LevelScreen:
     def __init__(self, game):
         self.game = game
-        self.text = Text(0, 0, 'Sector ' + str(self.game.level_manager.current_level), self.game.get_color("text"), 0.05, delay=2)
+        level = self.game.level_manager.current_level
+        if level > 0:
+            self.text = Text(0, 0, 'Sector ' + str(level), self.game.get_color("text"), 0.05, delay=2)
+        else:
+            self.text = Text(0, 0, "Tutorial", self.game.get_color("text"), 0.05, delay=2)
         self.delay = 4
         self.game.camera.reset()
 

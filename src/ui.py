@@ -304,6 +304,11 @@ class CompleteScreen(StoryScreen):
             Text(0, 0, 'Thank you for playing.', self.game.get_color("text"), 0.05),
             Text(0, 0, '', self.game.get_color("text"), 0.05),
             Text(0, 0, 'Copyright 2021 Michael Ren', self.game.get_color("primary"), 0.05),
+            Text(0, 0, '', self.game.get_color("text"), 0.05),
+            Text(0, 0, 'Audio by:', self.game.get_color("primary"), 0.05),
+            Text(0, 0, 'Kenney Audio Assets', self.game.get_color("primary"), 0.05),
+            Text(0, 0, 'Shapeforms Audio Assets', self.game.get_color("primary"), 0.05),
+            Text(0, 0, 'Mixkit Audio Assets', self.game.get_color("primary"), 0.05),
         ]
         self.block_height = self.lines[0].ch * len(self.lines)
         self.game.camera.reset()

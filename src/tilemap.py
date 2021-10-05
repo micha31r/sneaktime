@@ -27,6 +27,9 @@ class TiledMap:
             "camera_u": 39,
             "camera_d": 40,
         }
+        self.tracker_tiles = {
+            "tracker1": 57,
+        }
 
         self.load_tilemap(path)
         self.load_tileset()
@@ -66,9 +69,13 @@ class TiledMap:
                     self.polygons[layer["name"].lower()] = polys
 
     def load_tiles(self):
-        self.spawners = {}
+        self.spawners = {} # Spawn points
+        self.trackers = {} # Invisible points for the camera to track
         for k in self.spawner_tiles:
             self.spawners[k] = []
+        for k in self.tracker_tiles:
+            self.trackers[k] = []
+
         self.tiles = []
         self.tilewidth = self.data["tilewidth"]
         self.tileheight = self.data["tileheight"]
@@ -95,14 +102,33 @@ class TiledMap:
                                     "layer_name": layer["name"],
                                 })
                             else:
-                                # Spawner tile layers must be hidden
+                                # Spawner tile and camera tracker layers must be hidden
                                 for k, v in self.spawner_tiles.items():
                                     if tile_id == v:
-                                        self.spawners[k].append(rect)
+                                        self.spawners[k].append({
+                                            "tile_id": tile_id,
+                                            "rect": rect,
+                                        })
+                                for k, v in self.tracker_tiles.items():
+                                    if tile_id == v:
+                                        self.trackers[k].append({
+                                            "spawner_id": None,
+                                            "rect": rect,
+                                        })
                         tx += 1
                         if tx == cw:
                             tx = 0
                             ty += 1
+
+        # Find spawner tags that're at the same coordinate as the tracker tags
+        for k1, v1 in self.trackers.items():
+            for tracker in v1:
+                for k2, v2 in self.spawners.items():
+                    for spawner in v2:
+                        if tracker["rect"] == spawner["rect"]:
+                            tracker["spawner_id"] = spawner["tile_id"]
+
+        print(self.trackers)
 
     def rect_collide(self, rect, target_layer_name=None, exclude_layer_name=None):
         x1 = rect[0]

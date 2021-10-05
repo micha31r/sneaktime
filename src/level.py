@@ -92,6 +92,54 @@ LEVELS = [
     },
 ]
 
+TUTORIAL_MESSAGES = [
+    # Enemy
+    {
+        "tile_triggers": [50],
+        "message": "Shoot the enemies before they shoot you!",
+    },
+    # Disguise powerup
+    {
+        "tile_triggers": [41],
+        "message": "This powerup hides you from the enemies",
+    },
+    # Shotgun
+    {
+        "tile_triggers": [42],
+        "message": "This powerup allows you to shoot multiple bullets",
+    },
+    # Armour
+    {
+        "tile_triggers": [43],
+        "message": "This powerup protects you from any harm",
+    },
+    # Key
+    {
+        "tile_triggers": [44],
+        "message": "You must collect all keys to complete each level",
+    },
+    # Lasers
+    {
+        "tile_triggers": [33, 34],
+        "message": "Lasers will kill you instantly. AVOID THEM!",
+    },
+    # Ninja stars
+    {
+        "tile_triggers": [35, 36],
+        "message": "Ninja stars will kill you instantly. AVOID THEM!",
+    },
+    # Cameras
+    {
+        "tile_triggers": [37, 38, 39, 40],
+        "message": "Being spotted by any camera will trigger an instant lockdown",
+    },
+    # Exit
+    {
+        "tile_triggers": [None], # Exit isn't marked by a spawner tile so None is the default value
+        "message": "The exit will unlock after all keys have been collected",
+    },
+]
+
 class LevelManager:
     def __init__(self, game, n=0):
         self.game = game
@@ -104,6 +152,7 @@ class LevelManager:
         self.current_level = n
         self.unlocked_level = n
         self.levels = LEVELS
+        self.tutorial_messages = TUTORIAL_MESSAGES
         self.level_stats = [{} for i in range(len(LEVELS))]
         self.transparent_surface = pg.Surface(WORLD_SIZE, pg.SRCALPHA)
 
@@ -178,74 +227,74 @@ class LevelManager:
         spawners = self.current_map().spawners
 
         # Set player position
-        x, y, _, _ = spawners["player"][0]
+        x, y, _, _ = spawners["player"][0]["rect"]
         self.game.player.pos = pg.Vector2(x, y)
 
         # Spawn enemies
         points = spawners["enemy"]
         for p in points:
-            self.game.enemy_manager.add(enemy.Enemy(self.game, p[0], p[1]))
+            self.game.enemy_manager.add(enemy.Enemy(self.game, *p["rect"][:2]))
 
         points = spawners["boss"]
         for p in points:
-            self.game.enemy_manager.add(enemy.Boss(self.game, p[0], p[1]))
+            self.game.enemy_manager.add(enemy.Boss(self.game, *p["rect"][:2]))
 
         # Spawn items
         # Disguise items
         points = spawners["disguise"]
         for p in points:
-            self.game.item_manager.add(item.DisguisePowerUp(self.game, p[0], p[1]))
+            self.game.item_manager.add(item.DisguisePowerUp(self.game, *p["rect"][:2]))
 
         # Shotgun items
         points = spawners["shotgun"]
         for p in points:
-            self.game.item_manager.add(item.ShotgunPowerUp(self.game, p[0], p[1]))
+            self.game.item_manager.add(item.ShotgunPowerUp(self.game, *p["rect"][:2]))
 
         # Armour items
         points = spawners["armour"]
         for p in points:
-            self.game.item_manager.add(item.ArmourPowerUp(self.game, p[0], p[1]))
+            self.game.item_manager.add(item.ArmourPowerUp(self.game, *p["rect"][:2]))
 
         # Items
         points = spawners["key"]
         for p in points:
-            self.game.item_manager.add(item.KeyItem(self.game, p[0], p[1]))
+            self.game.item_manager.add(item.KeyItem(self.game, *p["rect"][:2]))
 
         # Traps
         # Horizontal and vertical lasers
         points = spawners["laser_h"]
         for p in points:
-            self.game.trap_manager.add(trap.LaserTrap(self.game, p[0], p[1], "horizontal"))
+            self.game.trap_manager.add(trap.LaserTrap(self.game, *p["rect"][:2], "horizontal"))
 
         points = spawners["laser_v"]
         for p in points:
-            self.game.trap_manager.add(trap.LaserTrap(self.game, p[0], p[1], "vertical"))
+            self.game.trap_manager.add(trap.LaserTrap(self.game, *p["rect"][:2], "vertical"))
 
         # Horizontal and vertical ninja stars
         points = spawners["ninja_star_h"]
         for p in points:
-            self.game.trap_manager.add(trap.NinjaStarTrap(self.game, p[0], p[1], "horizontal"))
+            self.game.trap_manager.add(trap.NinjaStarTrap(self.game, *p["rect"][:2], "horizontal"))
 
         points = spawners["ninja_star_v"]
         for p in points:
-            self.game.trap_manager.add(trap.NinjaStarTrap(self.game, p[0], p[1], "vertical"))
+            self.game.trap_manager.add(trap.NinjaStarTrap(self.game, *p["rect"][:2], "vertical"))
 
         # Left, Right, Up and Down cameras
         points = spawners["camera_l"]
         for p in points:
-            self.game.trap_manager.add(trap.CameraTrap(self.game, p[0], p[1], "left"))
+            self.game.trap_manager.add(trap.CameraTrap(self.game, *p["rect"][:2], "left"))
 
         points = spawners["camera_r"]
         for p in points:
-            self.game.trap_manager.add(trap.CameraTrap(self.game, p[0], p[1], "right"))
+            self.game.trap_manager.add(trap.CameraTrap(self.game, *p["rect"][:2], "right"))
 
         points = spawners["camera_u"]
         for p in points:
-            self.game.trap_manager.add(trap.CameraTrap(self.game, p[0], p[1], "up"))
+            self.game.trap_manager.add(trap.CameraTrap(self.game, *p["rect"][:2], "up"))
 
         points = spawners["camera_d"]
         for p in points:
-            self.game.trap_manager.add(trap.CameraTrap(self.game, p[0], p[1], "down"))
+            self.game.trap_manager.add(trap.CameraTrap(self.game, *p["rect"][:2], "down"))
 
     def reset(self):
         self.lockdown = False

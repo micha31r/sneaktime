@@ -22,6 +22,14 @@ class Player:
         self.sound_timer = 0.5
         self.first_shoot = False
 
+        # Tutorial
+        self.tutorial_timer = 1
+        self.tutorial_message = None
+        self.completed_tutorial = False
+        self.tutorial_tracker_counter = 0
+        self.tutorial_tracker_radius = 50
+        self.tracker_index = 0
+
         # Game stats
         self.gameplay_timer = 0
         self.death_count = 0
@@ -229,7 +237,7 @@ class Player:
                                     return
 
             # Player controls
-            if not self.completed_level:
+            if not self.completed_level and self.completed_tutorial:
                 # Update shoot counter
                 if not self.can_shoot:
                     self.shoot_counter += dt
@@ -288,7 +296,6 @@ class Player:
                 # Reset inventory messages
                 if self.inventory_message and self.inventory_message.complete:
                     self.inventory_message = None
-
         else:
             if self.game.speed < 0.01:
                 if not self.retry_message:
@@ -326,6 +333,41 @@ class Player:
         # Move and track player
         self.move(dt)
         self.game.camera.track((self.pos.x, self.pos.y, self.img_w, self.img_h))
+        
+        # Tutorial
+        if not self.completed_tutorial:
+            self.tutorial_timer -= dt
+            if self.tutorial_timer < 0:
+                trackers = self.game.level_manager.current_map().trackers["tracker1"]
+                if trackers:
+                    self.tutorial_tracker_counter += 10 * dt
+                    tracker = trackers[self.tracker_index]
+                    self.game.camera.track(tracker["rect"])
+                    if self.tutorial_message:
+                        if self.tutorial_message.retract:
+                            if self.tutorial_message.complete:
+                                # Track the next object or set the tutorial as complete
+                                self.tutorial_message = None
+                                if self.tracker_index < len(trackers)-1:
+                                    self.tracker_index += 1
+                                else:
+                                    self.completed_tutorial = True
+                                    self.game.interface_manager.message("You are on your own, good luck!", typing_effect=False)
+                        elif keys[pg.K_SPACE] and self.tutorial_message.text.index == len(self.tutorial_message.text.text):
+                            # Dismiss tutorial message
+                            sound_effects["confirm"].play()
+                            self.tutorial_message.retract = True
+                            self.tutorial_message.retract_delay = -1
+                    else:
+                        # Show tutorial message if the camera has (almost) stopped moving
+                        if self.game.camera.vel.x < 0.1 and self.game.camera.vel.y < 0.1:
+                            messages = self.game.level_manager.tutorial_messages
+                            for message in messages:
+                                if tracker["spawner_id"] in message["tile_triggers"]:
+                                    self.tutorial_message = self.game.interface_manager.message(message["message"], False, typing_effect=False)
+                                    break
+                else:
+                    self.completed_tutorial = True
 
     def draw(self, screen):
         if self.mode == "aim":
@@ -352,4 +394,12 @@ class Player:
             draw_ngon(self.transparent_surface, (*self.game.get_color("primary"), opacity), 5, self.active_armour_radius, self.c_pos, self.active_armour_angle)
             screen.blit(self.transparent_surface, (0, 0))
             self.transparent_surface.fill((0, 0, 0, 0))
+
+        # Draw tutorial highlighter
+        if not self.completed_tutorial:
+            tracker = self.game.level_manager.current_map().trackers["tracker1"][self.tracker_index]
+            change = (math.sin(self.tutorial_tracker_counter) + 1) * 10
+            _map = self.game.level_manager.current_map()
+            pos = pg.Vector2(tracker["rect"][0] + _map.tilewidth/2, tracker["rect"][1] + _map.tileheight/2)
+            pg.draw.circle(screen, self.game.get_color("primary"), pos, self.tutorial_tracker_radius + change, 2)
 

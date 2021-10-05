@@ -236,7 +236,7 @@ class LevelManager:
         if "message" in level_obj:
             self.show_message = True
 
-        spawners = self.current_map().spawners
+        spawners = self.map.spawners
 
         # Set player position
         x, y, _, _ = spawners["player"][0]["rect"]

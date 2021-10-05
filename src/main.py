@@ -73,14 +73,6 @@ class GameManager:
                 self.level_manager.unlocked_level = d["current_level"] + 1
                 self.level_manager.level_stats = d["level_stats"]
                 self.select_screen = ui.SelectScreen(self)
-                # Load player stats
-                # p = self.player
-                # p.gameplay_timer = d["gameplay_timer"]
-                # p.death_count = d["death_count"]
-                # p.kill_count = d["kill_count"]
-                # p.lockdown_count = d["lockdown_count"]
-                # p.powerup_count = d["powerup_count"]
-                # p.bullet_count = d["bullet_count"]
             self.interface_manager.message(f"You progress is resumed from the previous session", typing_effect=False)
             return True
             

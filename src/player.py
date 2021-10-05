@@ -60,8 +60,8 @@ class Player:
 
         # Interface stuff
         self.death_text = ""
-        self.show_retry_message = True
-        self.show_success_message = True
+        self.retry_message = None
+        self.success_message = None
         self.inventory_message = None
 
     def load_sprite(self):
@@ -76,8 +76,6 @@ class Player:
         self.first_shoot = False
         self.angle = 0
         self.inventory = inventory.InventoryManager(self.game)
-        self.show_retry_message = True
-        self.show_success_message = True
         self.inventory_message = None
         self.retry_message = None
         self.success_message = None
@@ -218,10 +216,9 @@ class Player:
                         self.bullet_count = 0
                     else:
                         if self.game.speed < 0.01:
-                            if self.show_success_message:
+                            if not self.success_message:
                                 sound_effects["success"].play()
                                 self.success_message = self.game.interface_manager.message("Level complete! Press SPACE to continue", False)
-                                self.show_success_message = False
                             elif self.success_message.text.index == len(self.success_message.text.text):
                                 if keys[pg.K_SPACE]:
                                     sound_effects["confirm"].play()
@@ -294,10 +291,9 @@ class Player:
 
         else:
             if self.game.speed < 0.01:
-                if self.show_retry_message:
+                if not self.retry_message:
                     sound_effects["fail"].play()
                     self.retry_message = self.game.interface_manager.message(self.death_text, False)
-                    self.show_retry_message = False
                 elif self.retry_message.text.index == len(self.retry_message.text.text):
                     if keys[pg.K_SPACE]:
                         sound_effects["confirm"].play()

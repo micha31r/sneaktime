@@ -169,5 +169,9 @@ class GameManager:
             pg.display.flip()
 
 
-game = GameManager()
-game.event_loop()
+try:
+    game = GameManager()
+    game.event_loop()
+except KeyboardInterrupt:
+    print("ctrl-c Keyboard Interrupt")
+

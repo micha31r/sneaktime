@@ -71,7 +71,7 @@ class GameManager:
     def save(self):
         p = self.player
         data = {
-            "current_level": self.level_manager.current_level,
+            "current_level": self.level_manager.unlocked_level,
             "level_stats": self.level_manager.level_stats,
         }
         with open(cache_path, 'w') as f:
@@ -84,7 +84,7 @@ class GameManager:
                 # Always resume from the "select" screen
                 self.mode = "select"
                 level = d["current_level"]
-                if self.level_manager.current_level < len(self.level_manager.levels) - 1:
+                if level < len(self.level_manager.levels) - 1:
                     level += 1
                 self.level_manager.current_level = level
                 self.level_manager.unlocked_level = level

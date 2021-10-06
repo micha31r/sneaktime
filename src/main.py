@@ -83,8 +83,11 @@ class GameManager:
                 d = json.load(f)
                 # Always resume from the "select" screen
                 self.mode = "select"
-                self.level_manager.current_level = d["current_level"] + 1
-                self.level_manager.unlocked_level = d["current_level"] + 1
+                level = d["current_level"]
+                if self.level_manager.current_level < len(self.level_manager.levels) - 1:
+                    level += 1
+                self.level_manager.current_level = level
+                self.level_manager.unlocked_level = level
                 self.level_manager.level_stats = d["level_stats"]
                 self.select_screen = ui.SelectScreen(self)
             self.interface_manager.message(f"You progress is resumed from the previous session", typing_effect=False)

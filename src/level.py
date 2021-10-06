@@ -152,6 +152,13 @@ TUTORIAL_MESSAGES = [
     },
 ]
 
+# Find the offsetted coordinate from the center of a rect
+# Useful when drawing a sprite in the center of a box
+# rect = (x, y, w, h)
+# size = (w, h)
+def c_offset(rect, size):
+    return (rect[0] + rect[2]/2 - size[0]/2, rect[1] + rect[3]/2 - size[1]/2)
+
 class LevelManager:
     def __init__(self, game, n=0):
         self.game = game
@@ -242,6 +249,8 @@ class LevelManager:
         x, y, _, _ = spawners["player"][0]["rect"]
         self.game.player.pos = pg.Vector2(x, y)
 
+        img_size = (48, 48)
+
         # Spawn enemies
         points = spawners["enemy"]
         for p in points:
@@ -255,22 +264,22 @@ class LevelManager:
         # Disguise items
         points = spawners["disguise"]
         for p in points:
-            self.game.item_manager.add(item.DisguisePowerUp(self.game, *p["rect"][:2]))
+            self.game.item_manager.add(item.DisguisePowerUp(self.game, *c_offset(p["rect"], img_size)))
 
         # Shotgun items
         points = spawners["shotgun"]
         for p in points:
-            self.game.item_manager.add(item.ShotgunPowerUp(self.game, *p["rect"][:2]))
+            self.game.item_manager.add(item.ShotgunPowerUp(self.game, *c_offset(p["rect"], img_size)))
 
         # Armour items
         points = spawners["armour"]
         for p in points:
-            self.game.item_manager.add(item.ArmourPowerUp(self.game, *p["rect"][:2]))
+            self.game.item_manager.add(item.ArmourPowerUp(self.game, *c_offset(p["rect"], img_size)))
 
         # Items
         points = spawners["key"]
         for p in points:
-            self.game.item_manager.add(item.KeyItem(self.game, *p["rect"][:2]))
+            self.game.item_manager.add(item.KeyItem(self.game, *c_offset(p["rect"], img_size)))
 
         # Traps
         # Horizontal and vertical lasers

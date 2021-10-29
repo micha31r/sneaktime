@@ -214,9 +214,9 @@ class SelectScreen:
                 elif keys[pg.K_SPACE]:
                     sound_effects["confirm"].play()
                     self.game.mode = "level"
-                    # Reset tutorial if level 0 is selected
                     self.game.level_manager.switch(self.selected_button)
-                    if self.selected_button == 0 and self.game.level_manager.previous_level != 0:
+                    # Reset tutorial if level 0 is selected
+                    if self.selected_button == 0:
                         self.game.player.completed_tutorial = False
                         self.game.tutorial_manager.reset()
                     else:

@@ -168,6 +168,7 @@ class LevelManager:
         self.play_lockdown_sound = False
         self.show_message = False
         self.show_message_timer = 1
+        self.first_level = True
         self.current_level = n
         self.unlocked_level = n
         self.levels = LEVELS
@@ -200,6 +201,7 @@ class LevelManager:
         return False
 
     def switch(self, n):
+        self.first_level = False
         self.current_level = n
         if self.unlocked_level < n:
             self.unlocked_level = n

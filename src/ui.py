@@ -215,7 +215,7 @@ class SelectScreen:
                     sound_effects["confirm"].play()
                     self.game.mode = "level"
                     # Reset tutorial if level 0 is selected
-                    if self.selected_button == 0 and self.game.level_manager.first_level or self.game.level_manager.current_level != 0:
+                    if self.selected_button == 0 and (self.game.level_manager.first_level or self.game.level_manager.current_level != 0):
                         self.game.player.completed_tutorial = False
                         self.game.tutorial_manager.reset()
                     else:

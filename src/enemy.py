@@ -34,7 +34,7 @@ class EnemyManager:
             e.update(dt, self.detect_outside_FOV)
             if e.is_dead():
                 sound_effects["splatter"].play()
-                self.game.player.kill_count_change += 1
+                self.game.player.kill_count += 1
                 del self.entities[i]
 
     def reset(self):

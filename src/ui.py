@@ -281,14 +281,16 @@ class SelectScreen:
 class CompleteScreen(StoryScreen):
     def __init__(self, game):
         super().__init__(game)
-        # Add stats together
+        # Sum up the stats of each level
         stats = {}
+
         # Ignore the first level because its a tutorial
         for data in self.game.level_manager.level_stats[1:]:
             if data:
                 for k, v in data.items():
                     if k in stats: stats[k] += v
                     else: stats[k] = v
+
         self.lines = [
             Text(0, 0, 'Congratulations, you have completed your mission', self.game.get_color("text"), 0.05, delay=2),
             Text(0, 0, 'and destroyed the bad guys\' technology!', self.game.get_color("text"), 0.05),

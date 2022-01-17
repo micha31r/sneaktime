@@ -333,7 +333,7 @@ class LevelManager:
                 if not self.play_lockdown_sound:
                     self.play_lockdown_sound = True
                     sound_effects["alarm"].play(-1)
-                    self.game.player.lockdown_count_change += 1
+                    self.game.player.lockdown_count += 1
                 self.game.enemy_manager.detect_outside_FOV = True
                 self.lockdown_timer -= dt
                 self.lockdown_opacity_counter += dt

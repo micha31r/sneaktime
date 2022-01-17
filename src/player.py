@@ -39,13 +39,9 @@ class Player:
         self.gameplay_timer = 0
         self.death_count = 0
         self.kill_count = 0
-        self.kill_count_change = 0
         self.lockdown_count = 0
-        self.lockdown_count_change = 0
         self.powerup_count = 0
-        self.powerup_count_change = 0
         self.bullet_count = 0
-        self.bullet_count_change = 0
 
         self.inventory = inventory.InventoryManager(self.game)
 
@@ -94,10 +90,10 @@ class Player:
         self.success_message = None
         self.completed_level = False
         self.gameplay_timer = 0
-        self.kill_count_change = 0
-        self.lockdown_count_change = 0
-        self.powerup_count_change = 0
-        self.bullet_count_change = 0
+        self.kill_count = 0
+        self.lockdown_count = 0
+        self.powerup_count = 0
+        self.bullet_count = 0
 
     def die(self, text=None):
         if self.alive:
@@ -214,10 +210,6 @@ class Player:
                             self.game.level_manager.lockdown = False
                             sound_effects["alarm"].fadeout(1000)
                         # Update stats
-                        self.kill_count += self.kill_count_change
-                        self.lockdown_count += self.lockdown_count_change
-                        self.powerup_count += self.powerup_count_change
-                        self.bullet_count += self.bullet_count_change
                         self.game.level_manager.record_stats()
                         self.game.save()
                         sound_effects["aura"].play()
@@ -256,10 +248,10 @@ class Player:
                         if not self.first_shoot and self.game.level_manager.current_level == 0:
                             self.first_shoot = True
                             self.game.interface_manager.message("Time slows down when you aim", typing_effect=False)
-                        self.bullet_count_change += 1
                         self.game.change_speed(0.25)
                         self.mode = "aim"
                     elif self.mode == "aim": # If key is just released and the control mode hasn't changed
+                        self.bullet_count += 1
                         self.game.change_speed(1)
                         self.shoot()
                         self.mode = "move"

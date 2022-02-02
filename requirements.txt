@@ -1,2 +1,6 @@
+altgraph==0.17.2
 collision==1.2.2
-pygame==2.0.1
+macholib==1.15.2
+modulegraph==0.19.2
+py2app==0.26.1
+pygame==2.1.2
